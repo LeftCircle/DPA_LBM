@@ -8,12 +8,15 @@
 template <typename T>
 class Array2D {
 public:
-	Array2D(int x_dim, int y_dim) : _x_dim(x_dim), _y_dim(y_dim) {
+	using iterator = typename std::vector<T>::iterator;
+    using const_iterator = typename std::vector<T>::const_iterator;
+
+	Array2D(int x_dim, int y_dim) : _dims{x_dim, y_dim} {
 		_data.resize(x_dim * y_dim);
 	}
 
 	int index(int x_idx, int y_idx) const noexcept {
-		return x_idx + _x_dim * y_idx;
+		return x_idx + _dims[0] * y_idx;
 	}
 
 	T& operator()(int x_idx, int y_idx) {
@@ -24,28 +27,38 @@ public:
 		return _data[index(x_idx, y_idx)];
 	}
 
-	int get_x_dim() const noexcept { return _x_dim; }
-	int get_y_dim() const noexcept { return _y_dim; }
+	int get_x_dim() const noexcept { return _dims[0]; }
+	int get_y_dim() const noexcept { return _dims[1]; }
+	int get_dim(int d) const { return _dims[d]; }
 
 	void clear() {
 		std::fill(_data.begin(), _data.end(), T());
 	}
 
+	void fill(T val){
+		std::fill(_data.begin(), _data.end(), val);
+	}
+
+	iterator begin() { return _data.begin(); }
+	iterator end() { return _data.end() }
+
+	const_iterator begin() const { return _data.begin(); }
+	const_iterator end() const { return _data.end(); }
+
 private:
-	int _x_dim;
-	int _y_dim;
+	int _dims[2];
 	std::vector<T> _data;
 };
 
 template <typename T>
 class Array3D {
 public:
-	Array3D(int x_dim, int y_dim, int z_dim) : _x_dim(x_dim), _y_dim(y_dim), _z_dim(z_dim) {
+	Array3D(int x_dim, int y_dim, int z_dim) : _dims{x_dim, y_dim, z_dim} {
 		_data.resize(x_dim * y_dim * z_dim);
 	}
 
 	int index(int x_idx, int y_idx, int z_idx) const noexcept {
-		return x_idx + _x_dim * (y_idx + _y_dim * z_idx);
+		return x_idx + _dims[0] * (y_idx + _dims[1] * z_idx);
 	}
 
 	T& operator()(int x_idx, int y_idx, int z_idx) {
@@ -56,18 +69,26 @@ public:
 		return _data[index(x_idx, y_idx, z_idx)];
 	}
 
-	int get_x_dim() const noexcept { return _x_dim; }
-	int get_y_dim() const noexcept { return _y_dim; }
-	int get_z_dim() const noexcept { return _z_dim; }
+	int get_x_dim() const noexcept { return _dims[0]; }
+	int get_y_dim() const noexcept { return _dims[1]; }
+	int get_z_dim() const noexcept { return _dims[2]; }
+	int get_dim(int d) const { return _dims[d]; }
+
+	void resize_dimension(int d, int size) {
+		_dims[d] = size;
+		_data.resize(_dims[0] * _dims[1] * _dims[2]);
+	}
 
 	void clear() {
 		std::fill(_data.begin(), _data.end(), T());
 	}
 
+	void fill(T val){
+		std::fill(_data.begin(), _data.end(), val);
+	}
+
 private:
-	int _x_dim;
-	int _y_dim;
-	int _z_dim;
+	int _dims[3];
 	std::vector<T> _data;
 };
 
