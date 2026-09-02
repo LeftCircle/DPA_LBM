@@ -219,7 +219,7 @@ class Vector2
    { return Vector2(xy[0]/v, xy[1]/v); }
 
    //! Inner product
-   const double operator*        (const Vector2& v) const  
+   const T operator*        (const Vector2& v) const  
    { return (xy[0]*v.xy[0] + xy[1]*v.xy[1]); }
   
    //! cross product
@@ -249,13 +249,15 @@ class Vector2
    const double X() const { return xy[0]; }
    const double Y() const { return xy[1]; }
 
-   const double magnitude() const 
+   const T magnitude() const 
    { return sqrt( xy[0]*xy[0] + xy[1]*xy[1] ); }
+
+   const T magnitude_squared() const { return xy[0]*xy[0] + xy[1]*xy[1]; }
 
    const Vector2 unitvector2() const { return *this/magnitude(); }
 
    void normalize() 
-   { double mag = magnitude(); xy[0] /= mag; xy[1] /= mag; }
+   { T mag = magnitude(); xy[0] /= mag; xy[1] /= mag; }
 
 //  Comparisons
 

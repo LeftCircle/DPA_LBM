@@ -40,10 +40,12 @@ public:
 	}
 
 	iterator begin() { return _data.begin(); }
-	iterator end() { return _data.end() }
+	iterator end() { return _data.end(); }
 
 	const_iterator begin() const { return _data.begin(); }
 	const_iterator end() const { return _data.end(); }
+
+	T* data() noexcept { return _data.data(); }
 
 private:
 	int _dims[2];
@@ -53,6 +55,8 @@ private:
 template <typename T>
 class Array3D {
 public:
+	using iterator = typename std::vector<T>::iterator;
+    using const_iterator = typename std::vector<T>::const_iterator;
 	Array3D(int x_dim, int y_dim, int z_dim) : _dims{x_dim, y_dim, z_dim} {
 		_data.resize(x_dim * y_dim * z_dim);
 	}
@@ -86,6 +90,14 @@ public:
 	void fill(T val){
 		std::fill(_data.begin(), _data.end(), val);
 	}
+
+	iterator begin() { return _data.begin(); }
+	iterator end() { return _data.end(); }
+
+	const_iterator begin() const { return _data.begin(); }
+	const_iterator end() const { return _data.end(); }
+
+	T* data() noexcept { return _data.data(); }
 
 private:
 	int _dims[3];
