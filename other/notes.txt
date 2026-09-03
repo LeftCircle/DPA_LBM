@@ -1,0 +1,13 @@
+
+configure:
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+
+build:
+cmake --build build -j$(nproc)
+
+
+run with unit
+ctest --test-dir build --output-on-failure
+
+run the gui
+./build/build/dpa_lbm_fluids
