@@ -12,9 +12,10 @@ TEST_CASE("Test LBM info propogates"){
     // Create a 3x3 grid of LBM data. 
     // Set density to 1 and u to zero for all. 
     // Advance dt and assert that all are the same.  
-    double speed_of_sound = 1.0;
     double tau = 1.0;
-    LBMData lbm_data(3, 3, 9, speed_of_sound, tau);
+    double dt = 1.0;
+    LBMData lbm_data(3, 3, 9);
+    LBMd2q9 lbmd2q9(dt, tau);
     lbm_data.set_all_density(1.0);
     for (int j = 0; j < lbm_data.dimension(1); j++){
         for (int i = 0; i < lbm_data.dimension(0); i++){
@@ -41,7 +42,7 @@ TEST_CASE("Test LBM info propogates"){
     }
     REQUIRE(is_zero);
 
-    LBMd2q9::set_to_equilibrium(lbm_data, 1.0);
+    lbmd2q9.set_to_equilibrium(lbm_data);
     
     // confirm that equilibrium is not nan
     for (int j = 0; j < lbm_data.dimension(1); j++){
@@ -52,7 +53,7 @@ TEST_CASE("Test LBM info propogates"){
         }
     }
     
-    LBMd2q9::advance(lbm_data, 0.0, 1.0);
+    lbmd2q9.advance(lbm_data, 0.0);
     
     // Loop over each grid point and check if nonzero
     for (int j = 0; j < lbm_data.dimension(1); j++){
@@ -70,19 +71,20 @@ TEST_CASE("Test LBM info propogates"){
     // that the second lattice point has a u.x > 0
     //lbm_data.set_velocity(0, 0, pba::Vector2(1.0, 0.0));
     lbm_data.f(1, 0, 0) = lbm_data.f(1, 0, 0) + 10.0;
-    LBMd2q9::advance(lbm_data, 1.0, 1.0);
+    lbmd2q9.advance(lbm_data, 1.0);
     REQUIRE(lbm_data.velocity(0, 0).X() != 0.0);
 }
 
 TEST_CASE("test hand solution"){
-    double speed_of_sound = 10;
-    LBMData lbm_data(3, 3, 9, speed_of_sound, 3.0);
+    double tau = 1.0;
+    LBMData lbm_data(3, 3, 9);
+    LBMd2q9 d2q9(1.0, tau);
     lbm_data.set_all_density(1.0);
     lbm_data.set_all_f(0);
     lbm_data.f(1, 1, 1) = 3.0;
     REQUIRE(lbm_data.f(1, 1, 1) == (3.0));
     
-    LBMd2q9::compute_moments(lbm_data);
+    d2q9.compute_moments(lbm_data);
     for (int j = 0; j < lbm_data.dimension(1); j++){
         for (int i = 0; i < lbm_data.dimension(0); i++){
             if (i == 1 && j == 1){
@@ -95,7 +97,7 @@ TEST_CASE("test hand solution"){
     }
     
     
-    LBMd2q9::advance(lbm_data, 0.0, 1.0);
+    d2q9.advance(lbm_data, 0.0);
     int n_nonzeros = 0;
     // Print all f values
     for (int j = 0; j < lbm_data.dimension(1); j++){

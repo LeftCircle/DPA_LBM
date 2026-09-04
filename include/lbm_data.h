@@ -7,7 +7,7 @@
 class LBMData{
 public:
 	
-	LBMData(int x_dims, int y_dims, int f_dims, double c_s = 1.0, double tau = 1.0);
+	LBMData(int x_dims, int y_dims, int f_dims);
 	
 
 	void set_all_density(double val);
@@ -15,11 +15,6 @@ public:
 	void set_all_velocity(double x_vel, double y_vel) { set_all_velocity(pba::Vector2(x_vel, y_vel)); }
 	void set_all_f(double val);
 
-	void set_speed_of_sound(const double c_s);
-	const double get_one_over_cs_squaerd() const noexcept { return _one_over_cs_squared; }
-	const double get_one_over_cs_fourth() const noexcept { return _one_over_cs_fourth; }
-
-	const double get_tau() const noexcept { return _tau; }
 
 	int dimension(int d) const;
 	int n_qs() const {return f.get_dim(0); }
@@ -40,12 +35,6 @@ public:
 	Array3D<double> f; // distribution function
 	// TODO -> consider removing fstar
 	Array3D<double> fstar; // intermediate distro function for ease of implementation
-
-private:
-	double _c_s = 1.0;
-	double _one_over_cs_squared = 1.0;
-	double _one_over_cs_fourth = 1.0;
-	double _tau = 1.0;
 };
 
 
