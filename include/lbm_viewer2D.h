@@ -27,16 +27,21 @@ public:
     void set_max_color(const Color& col);
     Color get_pixel(int x, int y) const;
 
+    void reset();
+    
+    
 private:
     void _color_pixels();
     void _init_viewer();
     void _display();
+    void _keyboard(unsigned char key, int x, int y);
 
 
 
 private:
     Color _max_color = Color(1, 1, 1);
     Color _min_color = Color(0, 0, 0);
+    
     std::shared_ptr<LBMData> _data;
     std::shared_ptr<LBMd2q9> _solver;
     ImageData _img;
@@ -47,6 +52,9 @@ private:
     // Some glut viewer voodoo
     static LBMViewer2D* _active_viewer;
     static void _display_callback();
+    static void _keyboard_callback(unsigned char key, int x, int y){if (_active_viewer != nullptr) {
+        _active_viewer->_keyboard(key, x, y);
+    }}
     
 
 

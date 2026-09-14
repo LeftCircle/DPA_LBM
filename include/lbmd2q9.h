@@ -7,20 +7,24 @@
 #include "algorithm"
 #include "numeric"
 
-const double default_w0 = 4.0 / 9.0;
 
 class LBMd2q9{
 public:
 	static constexpr int N_LATTICE_POSITIONS = 9;
+	static constexpr double DEFAULT_w0 = 4.0 / 9.0;
 	
 public:
-	LBMd2q9(double dt, double tau, double w_0 = default_w0);
+	LBMd2q9(double dt, double tau, double w_0 = DEFAULT_w0);
 
 	void set_dt(double dt);
 	void set_tau(double tau);
 	void set_weight0(double w0);
+	void set_speed_of_sound(double c_s);
 
-	// c_s is speed of sound
+	double get_tau() const { return _tau; }
+	double get_speed_of_sound() const { return _c_s; }
+
+
 	double advance(LBMData& data, const double t) const;
 
 	void compute_moments(LBMData& data) const;
@@ -34,6 +38,11 @@ public:
 	void propogate_to_neighbors(LBMData& data) const;
 	
 	void set_to_equilibrium(LBMData& data) const;
+
+	double compute_max_mach_number(const pba::Vector2<double>& max_vel) const;
+	double estimate_reynolds_number(const pba::Vector2<double>& max_vel, float macroscopic_scale) const;
+	double get_shear_viscoscity() const;
+	
 
 private:
 	

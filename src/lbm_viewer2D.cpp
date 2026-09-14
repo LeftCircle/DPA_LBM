@@ -28,13 +28,13 @@ void LBMViewer2D::_init_viewer(){
 	glClearColor( 0.0, 0.0, 0.0, 1.0 );
 	glEnable( GL_DEPTH_TEST );
 
-	//glutKeyboardFunc([](unsigned char key, int x, int y) { Controller::instance()->keyboard(key, x, y); });
+	glutKeyboardFunc(LBMViewer2D::_keyboard_callback);
 	//glutSpecialFunc([](int key, int x, int y) { Controller::instance()->special_keys(key, x, y); });
 	//glutReshapeFunc( [](int w, int h){ View::instance() -> reshape(w,h); } );
 	//glutIdleFunc( [](){ View::instance() -> idle(); } );
 	
     _active_viewer = this;
-    glutDisplayFunc( LBMViewer2D::_display_callback );
+    glutDisplayFunc(LBMViewer2D::_display_callback);
 }
 
 void LBMViewer2D::start_viewer(){
@@ -60,6 +60,59 @@ void LBMViewer2D::_display(void){
 	glutPostRedisplay();
 }
 
+void LBMViewer2D::_keyboard(unsigned char key, int x, int y){
+    switch (key)
+	{
+		case 27: // esc
+			exit(0);
+			break;
+        case 'c':{
+            // Lower speed of sound
+            _solver->set_speed_of_sound(_solver->get_speed_of_sound() * 0.99);
+            std::printf("Speed of sound is now %f\n", _solver->get_speed_of_sound());
+            break;
+        }
+        case 'C':{
+            // Lower speed of sound
+            _solver->set_speed_of_sound(_solver->get_speed_of_sound() * 1.01);
+            std::printf("Speed of sound is now %f\n", _solver->get_speed_of_sound());
+            break;
+        }
+        case 'P':{
+            // print data
+            auto max_vel = _data->get_max_u();
+            double maxmach = _solver->compute_max_mach_number(max_vel);
+            double estimated_reynolds = _solver->estimate_reynolds_number(max_vel, _data->dimension(0));
+            
+            printf("Reynolds = %f, Max mach = %f\n", estimated_reynolds, maxmach);
+            break;
+        }
+        case 'R':{
+            // reset
+            reset();
+            break;
+        }
+		case 't':{
+            // lower tau
+            _solver->set_tau(_solver->get_tau() * 0.99);
+            std::printf("Tau is now %f\n", _solver->get_tau());
+            break;
+        }
+        case 'T':{
+            // Raise tau
+            _solver->set_tau(_solver->get_tau() * 1.01);
+            std::printf("Tau is now %f\n", _solver->get_tau());
+            break;
+        }
+        
+    
+    }
+}
+
+void LBMViewer2D::reset(){
+
+}
+
 void LBMViewer2D::_display_callback() {
     if (_active_viewer != nullptr) {
         _active_viewer->_display();
@@ -71,7 +124,8 @@ void LBMViewer2D::_color_pixels(){
     for (int j = 0; j < _data->dimension(1); j++){
         for (int i = 0; i < _data->dimension(0); i++){
             auto dens = _data->dens(i, j);
-            auto t = dens / _total_density;
+            //auto t = dens / _total_density;
+            auto t = std::clamp(dens, 0.0, 1.0);
             auto c = _min_color * (1.0 - t) + _max_color * t;
             _img.set_first_three_channels(i, j, c.r, c.g, c.b);
         }

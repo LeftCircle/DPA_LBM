@@ -26,3 +26,14 @@ int LBMData::dimension(int d) const {
 double LBMData::get_total_density() const {
     return std::accumulate(dens.begin(), dens.end(), 0.0);
 }
+
+const pba::Vector2<double>& LBMData::get_max_u() const {
+    const auto max_vel = std::max_element(u.begin(), u.end(), [](const pba::Vector2<double>& l, const pba::Vector2<double>& r){
+        return l.magnitude_squared() < r.magnitude_squared();
+    });
+    if (max_vel == u.end()){
+        return pba::vec2d(0, 0);
+    }
+    return *max_vel;
+
+}

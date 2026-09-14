@@ -5,25 +5,32 @@
 LBMd2q9::LBMd2q9(double dt, double tau, double w0) : _dt(dt) {
     _set_speed_of_sound_from_dx_dt();
     set_tau(tau);
+    double visc = _c_s * _c_s * (_tau - _dt * 0.5);
+    printf("Shear viscoscity is %f\n", visc);
 }
 
 // triggers a lot of changes. Tau, dt, and velocities will be auto adjusted. 
 void LBMd2q9::set_dt(double dt) {
-    
-    // reset tau based on new dt
+    _dt = dt;
     set_tau(_tau);
+    _set_speed_of_sound_from_dx_dt();
 }
 
 void LBMd2q9::set_tau(double tau) {
     // viscoscity = c_s^2 ( tau - dt / 2), so since visc should always be > 0
-    _tau = std::max(_dt / 2.0, tau);
+    _tau = std::max(_dt / 2.0 + 0.01, tau);
     _dt_over_tau = _dt / tau;
+}
+
+void LBMd2q9::set_speed_of_sound(double c_s){
+    _c_s = c_s;
 }
 
 
 void LBMd2q9::_set_speed_of_sound_from_dx_dt() {
-    double dx_o_dt = _dx / _dt;
-    _c_s = 1.0 / 3.0 * dx_o_dt * dx_o_dt;
+    _c_s = 1.0 / 3.0 * (_dx * _dx) / (_dt * _dt);
+    //printf("c_s set to %f\n", _c_s);
+    //_c_s = 1.0;
     _one_over_cs_squared = 1.0 / (_c_s * _c_s);
     _one_over_cs_fourth = _one_over_cs_squared * _one_over_cs_squared;
 }
@@ -42,6 +49,10 @@ double LBMd2q9::advance(LBMData& data, const double t) const {
     compute_moments(data);
     compute_local_collisions(data);
     propogate_to_neighbors(data);
+    
+    // if (maxmach > 0.1){
+    //     printf("Mach of %f\n", maxmach);
+    // }
     return t + _dt;
 }
 
@@ -124,4 +135,17 @@ void LBMd2q9::set_to_equilibrium(LBMData& data) const {
             }   
         }
     }
+}
+
+double LBMd2q9::get_shear_viscoscity() const {
+    return _c_s * _c_s * (_tau - _dt * 0.5);
+}
+
+double LBMd2q9::compute_max_mach_number(const pba::Vector2<double>& max_vel) const {
+    // mach is u / c_s, so get max speed over c_s
+    return max_vel.magnitude() / _c_s;
+}
+
+double LBMd2q9::estimate_reynolds_number(const pba::Vector2<double>& max_vel, float macroscopic_scale) const{
+    return max_vel.magnitude() * macroscopic_scale / get_shear_viscoscity();
 }

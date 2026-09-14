@@ -25,6 +25,7 @@ public:
 	void set_velocity(int x, int y, const pba::Vector2<double> vel) { u(x, y) = vel; }
 
 	double get_total_density() const;
+	const pba::Vector2<double>& get_max_u() const;
 
 // Currently making data members public although that feels wrong for some reason
 public:
