@@ -24,11 +24,13 @@ void LBMd2q9::set_tau(double tau) {
 
 void LBMd2q9::set_speed_of_sound(double c_s){
     _c_s = c_s;
+    _one_over_cs_squared = 1.0 / (_c_s * _c_s);
+    _one_over_cs_fourth = _one_over_cs_squared * _one_over_cs_squared;
 }
 
 
 void LBMd2q9::_set_speed_of_sound_from_dx_dt() {
-    _c_s = 1.0 / 3.0 * (_dx * _dx) / (_dt * _dt);
+    _c_s = (1.0 / std::sqrt(3.0)) * (_dx / _dt);
     //printf("c_s set to %f\n", _c_s);
     //_c_s = 1.0;
     _one_over_cs_squared = 1.0 / (_c_s * _c_s);
@@ -49,10 +51,6 @@ double LBMd2q9::advance(LBMData& data, const double t) const {
     compute_moments(data);
     compute_local_collisions(data);
     propogate_to_neighbors(data);
-    
-    // if (maxmach > 0.1){
-    //     printf("Mach of %f\n", maxmach);
-    // }
     return t + _dt;
 }
 

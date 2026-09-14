@@ -56,8 +56,11 @@ void LBMViewer2D::_display(void){
 	tick();
     _img.gl_draw_pixels();
 
+    std::string time = std::to_string(_t);
+    glutSetWindowTitle(time.c_str());
 	glutSwapBuffers();
 	glutPostRedisplay();
+
 }
 
 void LBMViewer2D::_keyboard(unsigned char key, int x, int y){
