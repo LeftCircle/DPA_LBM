@@ -46,8 +46,8 @@ double LBMd2q9::advance(LBMData& data, const double t) const {
 }
 
 void LBMd2q9::_set_distribution_function_dimensions(LBMData& data) const {
-    if (data.n_qs() != _n_lattice_positions){
-        data.resize_f_dimension(0, _n_lattice_positions);
+    if (data.n_qs() != N_LATTICE_POSITIONS){
+        data.resize_f_dimension(0, N_LATTICE_POSITIONS);
     }
 }
 
@@ -57,7 +57,7 @@ void LBMd2q9::compute_moments(LBMData& data) const {
     for (int j = 0; j < data.dimension(1); j++){
         for (int i = 0; i < data.dimension(0); i++){
             const double* q_block = data.f.data() + data.f.index(0, i, j);
-            data.dens(i, j) = std::accumulate(q_block, q_block + _n_lattice_positions, 0.0);
+            data.dens(i, j) = std::accumulate(q_block, q_block + N_LATTICE_POSITIONS, 0.0);
             if (data.dens(i, j) == 0){
                 data.u(i, j).set(0, 0);
             } else {
@@ -91,7 +91,7 @@ void LBMd2q9::compute_local_collisions(LBMData& data) const {
         for (int i = 0; i < data.dimension(0); i++){
             const auto& dens = data.dens(i, j);
             const auto& u = data.u(i, j);
-            for (int q = 0; q < _n_lattice_positions; q++){
+            for (int q = 0; q < N_LATTICE_POSITIONS; q++){
                 data.fstar(q, i, j) = data.f(q, i, j) - _dt_over_tau * (data.f(q, i, j) - single_f_equilibrium(dens, u, q));
             }
         }

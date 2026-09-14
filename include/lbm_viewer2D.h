@@ -1,5 +1,7 @@
 #pragma once
 
+#include <GL/glut.h>
+
 #include "image_data.h"
 #include "lbmd2q9.h"
 #include "lbm_data.h"
@@ -27,6 +29,8 @@ public:
 
 private:
     void _color_pixels();
+    void _init_viewer();
+    void _display();
 
 
 
@@ -39,12 +43,14 @@ private:
     float _total_density;
     float _estimated_max_speed;
     float _t = 0;
+
+    // Some glut viewer voodoo
+    static LBMViewer2D* _active_viewer;
+    static void _display_callback();
     
 
 
 };
-
-
 
 
 } // end namespace dpalbm

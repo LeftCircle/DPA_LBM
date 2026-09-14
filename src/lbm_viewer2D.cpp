@@ -2,25 +2,68 @@
 #include "numeric"
 
 
+
 namespace dpalbm{
+
+LBMViewer2D* LBMViewer2D::_active_viewer = nullptr;
 
 
 LBMViewer2D::LBMViewer2D(const std::shared_ptr<LBMData> data, const std::shared_ptr<LBMd2q9> solver) :
     _data(std::move(data)), _solver(std::move(solver)) {
         _img.set_dimensions(_data->dimension(0), _data->dimension(1), 3);
         _total_density = _data->get_total_density();
-        _color_pixels();
+        tick();
 }
 
 
+void LBMViewer2D::_init_viewer(){
+    int argc = 1;
+    char program_name[] = "dpa_lbm";
+    char* argv[] = {program_name, nullptr};
+    glutInit(&argc, argv);
+	glutInitDisplayMode( GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH );
+	glutInitWindowSize( _img.get_width(), _img.get_height() );
+	glutCreateWindow( "View" );
+
+	glClearColor( 0.0, 0.0, 0.0, 1.0 );
+	glEnable( GL_DEPTH_TEST );
+
+	//glutKeyboardFunc([](unsigned char key, int x, int y) { Controller::instance()->keyboard(key, x, y); });
+	//glutSpecialFunc([](int key, int x, int y) { Controller::instance()->special_keys(key, x, y); });
+	//glutReshapeFunc( [](int w, int h){ View::instance() -> reshape(w,h); } );
+	//glutIdleFunc( [](){ View::instance() -> idle(); } );
+	
+    _active_viewer = this;
+    glutDisplayFunc( LBMViewer2D::_display_callback );
+}
+
 void LBMViewer2D::start_viewer(){
+    _init_viewer();
+    glutMainLoop();
 
 }
 
 void LBMViewer2D::tick(){
     _t = _solver->advance(*_data, _t);
+    _color_pixels();
 }
 
+void LBMViewer2D::_display(void){
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	glMatrixMode( GL_MODELVIEW );
+	glLoadIdentity();
+
+	tick();
+
+	glutSwapBuffers();
+	glutPostRedisplay();
+}
+
+void LBMViewer2D::_display_callback() {
+    if (_active_viewer != nullptr) {
+        _active_viewer->_display();
+    }
+}
 
 void LBMViewer2D::_color_pixels(){
     for (int j = 0; j < _data->dimension(1); j++){
@@ -28,7 +71,7 @@ void LBMViewer2D::_color_pixels(){
             auto dens = _data->dens(i, j);
             auto t = dens / _total_density;
             auto c = _min_color * (1.0 - t) + _max_color * t;
-            _img.set_first_three_channels(i, j, c.r, c.b, c.g);
+            _img.set_first_three_channels(i, j, c.r, c.g, c.b);
         }
     }
 }

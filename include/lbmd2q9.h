@@ -11,6 +11,9 @@ const double default_w0 = 4.0 / 9.0;
 
 class LBMd2q9{
 public:
+	static constexpr int N_LATTICE_POSITIONS = 9;
+	
+public:
 	LBMd2q9(double dt, double tau, double w_0 = default_w0);
 
 	void set_dt(double dt);
@@ -38,7 +41,6 @@ private:
 	void _set_distribution_function_dimensions(LBMData& data) const;
 	void _set_local_velocities_based_on_dt_and_weights();
 
-	static const int _n_lattice_positions = 9;
 	const double _dx = 1.0; // dx in lattice space. fixed to 1 since c_i and dt are based on dx
 	double _dt;
 	double _c_s; // speed of sound
@@ -47,12 +49,12 @@ private:
 	double _tau; // relaxation time
 	double _dt_over_tau;
 
-	double _weights[_n_lattice_positions] = {
+	double _weights[N_LATTICE_POSITIONS] = {
 		4.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0,
 		1.0 / 9.0, 1.0 / 9.0, 1.0 / 36.0,
 		1.0 / 36.0, 1.0 / 36.0, 1.0 / 36.0
 	};
-	pba::Vector2<double> _ci[_n_lattice_positions] = {
+	pba::Vector2<double> _ci[N_LATTICE_POSITIONS] = {
 		pba::vec2d(0, 0), pba::vec2d(1, 0), pba::vec2d(0, 1),
 		pba::vec2d(-1, 0), pba::vec2d(0, -1), pba::vec2d(1, 1),
 		pba::vec2d(-1, 1), pba::vec2d(-1, -1), pba::vec2d(1, -1)

@@ -1,4 +1,10 @@
 
+# Typical testing workflow:
+cmake -S . -B build
+cmake --build build --parallel
+ctest --test-dir build --output-on-failure --parallel
+
+
 configure:
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
 

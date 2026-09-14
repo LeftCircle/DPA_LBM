@@ -26,14 +26,15 @@ TEST_CASE("Test lbm viewer sets pixel on advance"){
     LBMViewer2D viewer(data, solver);
     viewer.set_min_color(min_color);
     viewer.set_max_color(max_color);
-    REQUIRE(viewer.get_pixel(0, 0) == max_color);
+    REQUIRE(viewer.get_pixel(0, 0) != min_color);
     REQUIRE(viewer.get_pixel(1, 0) == min_color);
     
     viewer.tick();
-
+    
+    auto c = viewer.get_pixel(1, 0);
+    printf("color = %f, %f, %f\n", c.r, c.g, c.b);
     REQUIRE(viewer.get_pixel(1, 0) != min_color);
-    REQUIRE(viewer.get_pixel(0, 0) != max_color, "Diffusion should have occured");
-
-
+    // Difusion should have occured
+    REQUIRE(viewer.get_pixel(0, 0) != max_color);
 
 }

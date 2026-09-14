@@ -116,6 +116,15 @@ target_link_libraries(dpalbm
         image_processing
 )
 
+add_executable(dpa_lbm_fluids
+    "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
+)
+
+target_link_libraries(dpa_lbm_fluids
+    PRIVATE
+        dpalbm
+)
+
 # ------------------------------------------------------------
 # Catch2 tests
 # ------------------------------------------------------------
