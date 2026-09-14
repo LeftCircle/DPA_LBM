@@ -35,7 +35,7 @@ private:
 
 
 private:
-    Color _max_color = Color(1, 0, 0);
+    Color _max_color = Color(1, 1, 1);
     Color _min_color = Color(0, 0, 0);
     std::shared_ptr<LBMData> _data;
     std::shared_ptr<LBMd2q9> _solver;

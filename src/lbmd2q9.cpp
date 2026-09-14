@@ -54,6 +54,7 @@ void LBMd2q9::_set_distribution_function_dimensions(LBMData& data) const {
 void LBMd2q9::compute_moments(LBMData& data) const {
     auto& f = data.f;
     auto& fs = data.fstar;
+    #pragma omp parallel for
     for (int j = 0; j < data.dimension(1); j++){
         for (int i = 0; i < data.dimension(0); i++){
             const double* q_block = data.f.data() + data.f.index(0, i, j);
@@ -87,6 +88,7 @@ double LBMd2q9::single_f_equilibrium(
 // I feel like this is the perfect use case for std::transform, but carrying the index that is used all the time is 
 // quite frustrating. Should try boost to simplify this. 
 void LBMd2q9::compute_local_collisions(LBMData& data) const {
+    #pragma omp parallel for
     for (int j = 0; j < data.dimension(1); j++){
         for (int i = 0; i < data.dimension(0); i++){
             const auto& dens = data.dens(i, j);
@@ -99,6 +101,7 @@ void LBMd2q9::compute_local_collisions(LBMData& data) const {
 }
 
 void LBMd2q9::propogate_to_neighbors(LBMData& data) const {
+    #pragma omp parallel for
     for (int j = 0; j < data.dimension(1); j++){
         for (int i = 0; i < data.dimension(0); i++){
             for (int q = 0; q < 9; q++){
@@ -111,6 +114,7 @@ void LBMd2q9::propogate_to_neighbors(LBMData& data) const {
 }
 
 void LBMd2q9::set_to_equilibrium(LBMData& data) const {
+    #pragma omp parallel for
     for (int j = 0; j < data.dimension(1); j++){
         for (int i = 0; i < data.dimension(0); i++){
             const auto& dens = data.dens(i, j);

@@ -54,6 +54,7 @@ void LBMViewer2D::_display(void){
 	glLoadIdentity();
 
 	tick();
+    _img.gl_draw_pixels();
 
 	glutSwapBuffers();
 	glutPostRedisplay();
@@ -66,6 +67,7 @@ void LBMViewer2D::_display_callback() {
 }
 
 void LBMViewer2D::_color_pixels(){
+    #pragma omp parallel for
     for (int j = 0; j < _data->dimension(1); j++){
         for (int i = 0; i < _data->dimension(0); i++){
             auto dens = _data->dens(i, j);
