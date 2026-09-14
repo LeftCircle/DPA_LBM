@@ -19,15 +19,72 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
 # ------------------------------------------------------------
 
 # Qt's CMake integration handles moc/uic/rcc for Qt classes and forms.
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTORCC ON)
+# set(CMAKE_AUTOMOC ON)
+# set(CMAKE_AUTOUIC ON)
+# set(CMAKE_AUTORCC ON)
 
 find_package(OpenMP REQUIRED)
-find_package(Qt6 REQUIRED COMPONENTS Widgets Charts)
+# find_package(Qt6 REQUIRED COMPONENTS Widgets Charts)
 
 # Optional: build tests by default
 include(CTest)
+
+# ------------------------------------------------------------
+# Image Processing
+# ------------------------------------------------------------
+
+set(IMAGE_PROCESSING_DEPS_ROOT
+    "/home/left/local"
+    #"/home/leftcircle/programming"
+    CACHE PATH
+    "Prefix containing include/ and lib/ for OpenImageIO/OpenEXR"
+)
+
+set(IMAGE_PROCESSING_BUILD_VIEWER ON CACHE BOOL "" FORCE)
+set(IMAGE_PROCESSING_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(IMAGE_PROCESSING_BUILD_PYTHON OFF CACHE BOOL "" FORCE)
+
+add_subdirectory(
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/DPA_ImageProcessing"
+    "${CMAKE_CURRENT_BINARY_DIR}/DPA_ImageProcessing"
+)
+
+
+# ------------------------------------------------------------
+# LBM Things
+# ------------------------------------------------------------
+
+# file(GLOB_RECURSE GUI_SOURCES CONFIGURE_DEPENDS
+#     "${CMAKE_CURRENT_SOURCE_DIR}/gui/src/*.cpp"
+# )
+
+# file(GLOB_RECURSE GUI_HEADERS CONFIGURE_DEPENDS
+#     "${CMAKE_CURRENT_SOURCE_DIR}/gui/include/*.h"
+#     "${CMAKE_CURRENT_SOURCE_DIR}/gui/include/*.hpp"
+# )
+
+# # add_executable(dpa_lbm_fluids
+# #     ${GUI_SOURCES}
+# #     ${GUI_HEADERS}
+# # )
+
+# add_executable(dpa_lbm_fluids
+#     "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
+# )
+
+# target_include_directories(dpa_lbm_fluids
+#     PRIVATE
+#         "${CMAKE_CURRENT_SOURCE_DIR}/gui/include"
+# )
+
+# target_link_libraries(dpa_lbm_fluids
+#     PUBLIC
+#         image_processing
+#     PRIVATE
+#         dpalbm
+#         Qt6::Widgets
+#         Qt6::Charts
+# )
 
 # ------------------------------------------------------------
 # Core LBM Things!
@@ -56,36 +113,7 @@ target_include_directories(dpalbm
 target_link_libraries(dpalbm
     PUBLIC
         OpenMP::OpenMP_CXX
-)
-
-# ------------------------------------------------------------
-# Example/demo executable
-# ------------------------------------------------------------
-
-file(GLOB_RECURSE GUI_SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/gui/src/*.cpp"
-)
-
-file(GLOB_RECURSE GUI_HEADERS CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/gui/include/*.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/gui/include/*.hpp"
-)
-
-add_executable(dpa_lbm_fluids
-    ${GUI_SOURCES}
-    ${GUI_HEADERS}
-)
-
-target_include_directories(dpa_lbm_fluids
-    PRIVATE
-        "${CMAKE_CURRENT_SOURCE_DIR}/gui/include"
-)
-
-target_link_libraries(dpa_lbm_fluids
-    PRIVATE
-        dpalbm
-        Qt6::Widgets
-        Qt6::Charts
+        image_processing
 )
 
 # ------------------------------------------------------------

@@ -24,6 +24,8 @@ public:
 	const pba::Vector2<double>& velocity(int x, int y) const { return u(x, y); }
 	void set_velocity(int x, int y, const pba::Vector2<double> vel) { u(x, y) = vel; }
 
+	double get_total_density() const;
+
 // Currently making data members public although that feels wrong for some reason
 public:
 	Array2D<double> dens;
