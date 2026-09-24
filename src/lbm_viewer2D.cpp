@@ -128,7 +128,7 @@ void LBMViewer2D::_color_pixels(){
         for (int i = 0; i < _data->dimension(0); i++){
             auto dens = _data->dens(i, j);
             dens -= 1.0;
-            auto t = dens / (1.1 - 1);
+            auto t = dens / (1.05 - 1);
             //t = std::clamp(dens, 0.0, 1.0);
             auto c = _min_color * (1.0 - t) + _max_color * t;
             _img.set_first_three_channels(i, j, c.r, c.g, c.b);

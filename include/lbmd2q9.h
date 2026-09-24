@@ -43,12 +43,16 @@ public:
 	double estimate_reynolds_number(const pba::Vector2<double>& max_vel, float macroscopic_scale) const;
 	double get_shear_viscoscity() const;
 	
+	void propogate_interior_points(LBMData& data) const;
+	void propogate_all_points(LBMData& data) const;
+	void propogate_periodic_boundary_points(LBMData& data) const;
+	void boundary_collision(LBMData& data) const;
+	
 
 private:
-	
 	void _set_speed_of_sound_from_dx_dt();
 	void _set_distribution_function_dimensions(LBMData& data) const;
-	void _set_local_velocities_based_on_dt_and_weights();
+
 
 	const double _dx = 1.0; // dx in lattice space. fixed to 1 since c_i and dt are based on dx
 	double _dt;

@@ -37,14 +37,6 @@ void LBMd2q9::_set_speed_of_sound_from_dx_dt() {
     _one_over_cs_fourth = _one_over_cs_squared * _one_over_cs_squared;
 }
 
-// We have to uphold w_i * c_ia = 0 and w_i * c_ia * c_ib = chrondelta_ab * cs^2
-// and dt * c_ia = 1.0;
-void LBMd2q9::_set_local_velocities_based_on_dt_and_weights() {
-    // maybe just try and see if conditions are met and print out if so?
-    
-    
-}
-
 
 double LBMd2q9::advance(LBMData& data, const double t) const {
     _set_distribution_function_dimensions(data);
@@ -62,7 +54,6 @@ void LBMd2q9::_set_distribution_function_dimensions(LBMData& data) const {
 
 void LBMd2q9::compute_moments(LBMData& data) const {
     auto& f = data.f;
-    auto& fs = data.fstar;
     #pragma omp parallel for
     for (int j = 0; j < data.dimension(1); j++){
         for (int i = 0; i < data.dimension(0); i++){
@@ -97,9 +88,11 @@ double LBMd2q9::single_f_equilibrium(
 // I feel like this is the perfect use case for std::transform, but carrying the index that is used all the time is 
 // quite frustrating. Should try boost to simplify this. 
 void LBMd2q9::compute_local_collisions(LBMData& data) const {
+    const int _y = data.dimension(1);
+    const int _x = data.dimension(0);
     #pragma omp parallel for
-    for (int j = 0; j < data.dimension(1); j++){
-        for (int i = 0; i < data.dimension(0); i++){
+    for (int j = 0; j < _y; j++){
+        for (int i = 0; i < _x; i++){
             const auto& dens = data.dens(i, j);
             const auto& u = data.u(i, j);
             for (int q = 0; q < N_LATTICE_POSITIONS; q++){
@@ -110,10 +103,90 @@ void LBMd2q9::compute_local_collisions(LBMData& data) const {
 }
 
 void LBMd2q9::propogate_to_neighbors(LBMData& data) const {
+
+    
+    boundary_collision(data);
+    propogate_all_points(data);
+    //propogate_interior_points(data);
+    //propogate_periodic_boundary_points(data);
+}
+
+void LBMd2q9::propogate_periodic_boundary_points(LBMData& data) const {
+    const int _y = data.dimension(1);
+    const int _x = data.dimension(0);
+    // Top and bottom regions (so all the x points)
     #pragma omp parallel for
-    for (int j = 0; j < data.dimension(1); j++){
-        for (int i = 0; i < data.dimension(0); i++){
+    for (int j = 0; j < _y; j += (_y - 1)){
+        for (int i = 0; i < _x; i++){
+            for (int q = 0; q < N_LATTICE_POSITIONS; q++){
+                int ni = (i + static_cast<int>(_ci[q].X()) + data.dimension(0)) % data.dimension(0);
+                int nj = (j + static_cast<int>(_ci[q].Y()) + data.dimension(1)) % data.dimension(1);
+                data.f(q, ni, nj) = data.fstar(q, i, j);
+            }
+        }
+    }
+
+    // Left and right regions (so all the y points)
+    #pragma omp parallel for
+    for (int j = 1; j < _y - 1; j++){
+        for (int i = 0; i < _x; i += _x - 1){
+            for (int q = 0; q < N_LATTICE_POSITIONS; q++){
+                int ni = (i + static_cast<int>(_ci[q].X()) + data.dimension(0)) % data.dimension(0);
+                int nj = (j + static_cast<int>(_ci[q].Y()) + data.dimension(1)) % data.dimension(1);
+                data.f(q, ni, nj) = data.fstar(q, i, j);
+            }
+        }
+    }
+}
+
+void LBMd2q9::boundary_collision(LBMData& data) const {
+    const int _y = data.dimension(1);
+    const int _x = data.dimension(0);
+    auto bound_coll_i = [*this, &data](int x, int y, int q, int p){
+        return single_f_equilibrium(p, data.u(x, y), q) + 
+                        (data.fstar(q, x, y) - 
+                        single_f_equilibrium(data.dens(x, y), data.u(x, y), q));
+    };
+    // Only having boundary condition with pressure gradient on sides
+    float inlet_pressure = 2.0;
+    float outlet_pressure = 1.0;
+    #pragma omp parallel for num_threads(4)
+    for (int j = 0; j < _y; j++){
+        // left side
+        data.fstar(1, 0, j) = bound_coll_i(_x - 2, j, 1, inlet_pressure);
+        data.fstar(5, 0, j) = bound_coll_i(_x - 2, j, 5, inlet_pressure);
+        data.fstar(8, 0, j) = bound_coll_i(_x - 2, j, 8, inlet_pressure);
+
+        // right side
+        data.fstar(3, _x - 1, j) = bound_coll_i(1, j, 3, outlet_pressure);
+        data.fstar(6, _x - 1, j) = bound_coll_i(1, j, 6, outlet_pressure);
+        data.fstar(7, _x - 1, j) = bound_coll_i(1, j, 7, outlet_pressure);
+    }
+}
+
+// TODO-> We need a better method of handling boundary conditions and borders. Right now we just assume the edge is the bound
+void LBMd2q9::propogate_interior_points(LBMData& data) const {
+    const int _y = data.dimension(1);
+    const int _x = data.dimension(0);
+    #pragma omp parallel for
+    for (int j = 1; j < _y - 1; j++){
+        for (int i = 1; i < _x - 1; i++){
             for (int q = 0; q < 9; q++){
+                int ni = (i + static_cast<int>(_ci[q].X()));// + data.dimension(0) % data.dimension(0);
+                int nj = (j + static_cast<int>(_ci[q].Y()));// + data.dimension(1) % data.dimension(1);
+                data.f(q, ni, nj) = data.fstar(q, i, j);
+            }
+        }
+    }
+}
+
+void LBMd2q9::propogate_all_points(LBMData& data) const {
+    const int _y = data.dimension(1);
+    const int _x = data.dimension(0);
+    #pragma omp parallel for
+    for (int j = 0; j < _y; j++){
+        for (int i = 0; i < _x; i++){
+            for (int q = 0; q < N_LATTICE_POSITIONS; q++){
                 int ni = (i + static_cast<int>(_ci[q].X()) + data.dimension(0)) % data.dimension(0);
                 int nj = (j + static_cast<int>(_ci[q].Y()) + data.dimension(1)) % data.dimension(1);
                 data.f(q, ni, nj) = data.fstar(q, i, j);
@@ -123,9 +196,11 @@ void LBMd2q9::propogate_to_neighbors(LBMData& data) const {
 }
 
 void LBMd2q9::set_to_equilibrium(LBMData& data) const {
+   const int _y = data.dimension(1);
+    const int _x = data.dimension(0);
     #pragma omp parallel for
-    for (int j = 0; j < data.dimension(1); j++){
-        for (int i = 0; i < data.dimension(0); i++){
+    for (int j = 0; j < _y; j++){
+        for (int i = 0; i < _x; i++){
             const auto& dens = data.dens(i, j);
             const auto& u = data.u(i, j);
             for (int q = 0; q < 9; q++){

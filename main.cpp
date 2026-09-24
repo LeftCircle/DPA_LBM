@@ -23,7 +23,12 @@ int main(int argc, char** argv){
             data->dens(i, j) = 1.05;
         }
     }
-    //data->dens(w / 2, h / 2) = 10;
+    float large_val = 30.0;
+    data->dens(w / 2, h / 2) = large_val;
+    data->dens(w / 4, h / 4) = large_val;
+    data->dens(w / 4, 3 * h / 4) = large_val;
+    data->dens(3 * w / 4, h / 4) = large_val;
+    data->dens(3 * w / 4, 3 * h / 4) = large_val;
 
     solver->set_to_equilibrium(*data);
 
