@@ -51,6 +51,27 @@ add_subdirectory(
 
 
 # ------------------------------------------------------------
+# OpenVDB
+# ------------------------------------------------------------
+
+set(OpenVDB_ROOT
+    "/home/left/local"
+    CACHE PATH
+    "OpenVDB installation prefix"
+)
+
+# OpenVDB installs FindOpenVDB.cmake here.
+list(PREPEND CMAKE_MODULE_PATH
+    "${OpenVDB_ROOT}/lib/cmake/OpenVDB"
+    "${OpenVDB_ROOT}/lib64/cmake/OpenVDB"
+)
+
+list(PREPEND CMAKE_PREFIX_PATH
+    "${OpenVDB_ROOT}"
+)
+
+
+# ------------------------------------------------------------
 # LBM Things
 # ------------------------------------------------------------
 
@@ -90,6 +111,9 @@ add_subdirectory(
 # Core LBM Things!
 # ------------------------------------------------------------
 
+find_package(OpenVDB REQUIRED)
+find_package(Boost REQUIRED)
+
 file(GLOB_RECURSE DPALBM_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.C"
@@ -114,6 +138,8 @@ target_link_libraries(dpalbm
     PUBLIC
         OpenMP::OpenMP_CXX
         image_processing
+        OpenVDB::openvdb
+        Boost::headers
 )
 
 add_executable(dpa_lbm_fluids

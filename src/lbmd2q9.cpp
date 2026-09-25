@@ -103,41 +103,10 @@ void LBMd2q9::compute_local_collisions(LBMData& data) const {
 }
 
 void LBMd2q9::propogate_to_neighbors(LBMData& data) const {
-
-    
     boundary_collision(data);
     propogate_all_points(data);
-    //propogate_interior_points(data);
-    //propogate_periodic_boundary_points(data);
 }
 
-void LBMd2q9::propogate_periodic_boundary_points(LBMData& data) const {
-    const int _y = data.dimension(1);
-    const int _x = data.dimension(0);
-    // Top and bottom regions (so all the x points)
-    #pragma omp parallel for
-    for (int j = 0; j < _y; j += (_y - 1)){
-        for (int i = 0; i < _x; i++){
-            for (int q = 0; q < N_LATTICE_POSITIONS; q++){
-                int ni = (i + static_cast<int>(_ci[q].X()) + data.dimension(0)) % data.dimension(0);
-                int nj = (j + static_cast<int>(_ci[q].Y()) + data.dimension(1)) % data.dimension(1);
-                data.f(q, ni, nj) = data.fstar(q, i, j);
-            }
-        }
-    }
-
-    // Left and right regions (so all the y points)
-    #pragma omp parallel for
-    for (int j = 1; j < _y - 1; j++){
-        for (int i = 0; i < _x; i += _x - 1){
-            for (int q = 0; q < N_LATTICE_POSITIONS; q++){
-                int ni = (i + static_cast<int>(_ci[q].X()) + data.dimension(0)) % data.dimension(0);
-                int nj = (j + static_cast<int>(_ci[q].Y()) + data.dimension(1)) % data.dimension(1);
-                data.f(q, ni, nj) = data.fstar(q, i, j);
-            }
-        }
-    }
-}
 
 void LBMd2q9::boundary_collision(LBMData& data) const {
     const int _y = data.dimension(1);
@@ -148,8 +117,8 @@ void LBMd2q9::boundary_collision(LBMData& data) const {
                         single_f_equilibrium(data.dens(x, y), data.u(x, y), q));
     };
     // Only having boundary condition with pressure gradient on sides
-    float inlet_pressure = 2.0;
-    float outlet_pressure = 1.0;
+    float inlet_pressure = 3.11;
+    float outlet_pressure = 3.0;
     #pragma omp parallel for num_threads(4)
     for (int j = 0; j < _y; j++){
         // left side
@@ -161,22 +130,6 @@ void LBMd2q9::boundary_collision(LBMData& data) const {
         data.fstar(3, _x - 1, j) = bound_coll_i(1, j, 3, outlet_pressure);
         data.fstar(6, _x - 1, j) = bound_coll_i(1, j, 6, outlet_pressure);
         data.fstar(7, _x - 1, j) = bound_coll_i(1, j, 7, outlet_pressure);
-    }
-}
-
-// TODO-> We need a better method of handling boundary conditions and borders. Right now we just assume the edge is the bound
-void LBMd2q9::propogate_interior_points(LBMData& data) const {
-    const int _y = data.dimension(1);
-    const int _x = data.dimension(0);
-    #pragma omp parallel for
-    for (int j = 1; j < _y - 1; j++){
-        for (int i = 1; i < _x - 1; i++){
-            for (int q = 0; q < 9; q++){
-                int ni = (i + static_cast<int>(_ci[q].X()));// + data.dimension(0) % data.dimension(0);
-                int nj = (j + static_cast<int>(_ci[q].Y()));// + data.dimension(1) % data.dimension(1);
-                data.f(q, ni, nj) = data.fstar(q, i, j);
-            }
-        }
     }
 }
 
