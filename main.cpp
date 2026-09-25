@@ -6,15 +6,15 @@ using namespace dpalbm;
 
 int main(int argc, char** argv){
     
-    int w = 1920 / 2;
-    int h = 1080 / 2;
+    int w = 1920 / 8;
+    int h = 1080 / 8;
     std::shared_ptr<LBMData> data = std::make_shared<LBMData>(w, h, LBMd2q9::N_LATTICE_POSITIONS);
     std::shared_ptr<LBMd2q9> solver = std::make_shared<LBMd2q9>(1.0, 1.0);
     solver->set_speed_of_sound(1.0 / sqrt(3.0));
     
     for (int j = 0; j < h; j++){
         for (int i = 0; i < w; i++){
-            data->dens(i, j) = 1.0;
+            data->dens(i, j) = 1;
         }
     }
     
@@ -23,12 +23,19 @@ int main(int argc, char** argv){
             data->dens(i, j) = 1.05;
         }
     }
-    float large_val = 30.0;
-    data->dens(w / 2, h / 2) = large_val;
-    data->dens(w / 4, h / 4) = large_val;
-    data->dens(w / 4, 3 * h / 4) = large_val;
-    data->dens(3 * w / 4, h / 4) = large_val;
-    data->dens(3 * w / 4, 3 * h / 4) = large_val;
+    // float large_val = 1.0;
+    // data->dens(w / 2, h / 2) = large_val;
+    // data->dens(w / 4, h / 4) = large_val;
+    // data->dens(w / 4, 3 * h / 4) = large_val;
+    // data->dens(3 * w / 4, h / 4) = large_val;
+    // data->dens(3 * w / 4, 3 * h / 4) = large_val;
+
+    // Block a square in the middle
+    for (int j = (2*h / 5); j < (3 * h / 5); j++){
+        for (int i = (19*w / 40); i < (21 * w / 40); i++){
+            data->get_bounds().block(i, j);
+        }
+    }
 
     solver->set_to_equilibrium(*data);
 

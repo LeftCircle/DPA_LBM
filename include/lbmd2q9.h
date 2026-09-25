@@ -47,13 +47,13 @@ public:
 	void propogate_all_points(LBMData& data) const;
 	void propogate_periodic_boundary_points(LBMData& data) const;
 	void boundary_collision(LBMData& data) const;
+	constexpr int get_fi_minus(int q) const { return _fi_minus[q]; };
 	
-
 private:
 	void _set_speed_of_sound_from_dx_dt();
 	void _set_distribution_function_dimensions(LBMData& data) const;
 
-
+private:
 	const double _dx = 1.0; // dx in lattice space. fixed to 1 since c_i and dt are based on dx
 	double _dt;
 	double _c_s; // speed of sound
@@ -71,6 +71,9 @@ private:
 		pba::vec2d(0, 0), pba::vec2d(1, 0), pba::vec2d(0, 1),
 		pba::vec2d(-1, 0), pba::vec2d(0, -1), pba::vec2d(1, 1),
 		pba::vec2d(-1, 1), pba::vec2d(-1, -1), pba::vec2d(1, -1)
+	};
+	inline static constexpr std::array<int, N_LATTICE_POSITIONS> _fi_minus{
+		0, 3, 4, 1, 2, 7, 8, 5, 6
 	};
 };
 

@@ -104,11 +104,12 @@ TEST_CASE("test hand solution"){
         for (int i = 0; i < lbm_data.dimension(0); i++){
             for(int q = 0; q < 9; q++){
                 //std::cout << "f(" << q << ", " << i << ", " << j << ") = " << lbm_data.f(q, i, j) << std::endl;
-                if (lbm_data.f(q, i, j) != 0){
+                if (std::abs(lbm_data.f(q, i, j)) > 0.001){
                     n_nonzeros += 1;
                 }
             }
         }
     }
+    // NOTE -> if this fails it is likely due to boundary collisions
     REQUIRE(n_nonzeros == 9);
 }

@@ -3,8 +3,8 @@
 
 
 LBMData::LBMData(int x_dims, int y_dims, int f_dims) : 
-    dens(x_dims, y_dims), u(x_dims, y_dims), f(f_dims, x_dims, y_dims), fstar(f_dims, x_dims, y_dims) {}
-
+    dens(x_dims, y_dims), u(x_dims, y_dims), f(f_dims, x_dims, y_dims), fstar(f_dims, x_dims, y_dims),
+    _bounds(x_dims, y_dims) {}
 
 
 void LBMData::set_all_density(double val){

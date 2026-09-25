@@ -46,6 +46,7 @@ void LBMViewer2D::start_viewer(){
 void LBMViewer2D::tick(){
     _t = _solver->advance(*_data, _t);
     _color_pixels();
+    std::printf("Total density = %d\n", std::accumulate(_data->dens.begin(), _data->dens.end(), 0));
 }
 
 void LBMViewer2D::_display(void){
@@ -126,12 +127,16 @@ void LBMViewer2D::_color_pixels(){
     #pragma omp parallel for
     for (int j = 0; j < _data->dimension(1); j++){
         for (int i = 0; i < _data->dimension(0); i++){
-            auto dens = _data->dens(i, j);
-            dens -= 1.0;
-            auto t = dens / (1.05 - 1);
-            //t = std::clamp(dens, 0.0, 1.0);
-            auto c = _min_color * (1.0 - t) + _max_color * t;
-            _img.set_first_three_channels(i, j, c.r, c.g, c.b);
+            if (_data->get_bounds().is_blocked(i, j)){
+                _img.set_first_three_channels(i, j, 1, 0, 0);
+            } else{
+                auto dens = _data->dens(i, j);
+                dens -= 1.0;
+                auto t = dens / (1.05 - 1);
+                //t = std::clamp(dens, 0.0, 1.0);
+                auto c = _min_color * (1.0 - t) + _max_color * t;
+                _img.set_first_three_channels(i, j, c.r, c.g, c.b);
+            }
         }
     }
 }

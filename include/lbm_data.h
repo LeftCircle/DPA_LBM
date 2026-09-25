@@ -3,6 +3,7 @@
 
 #include "tessendorf_vecendorf.h"
 #include "nd_vector.h"
+#include "bounce_back_halfway.h"
 
 class LBMData{
 public:
@@ -24,8 +25,16 @@ public:
 	const pba::Vector2<double>& velocity(int x, int y) const { return u(x, y); }
 	void set_velocity(int x, int y, const pba::Vector2<double> vel) { u(x, y) = vel; }
 
+	void set_f(int x, int y, int q, double val) { f(q, x, y) = val; }
+	const double get_f(int x, int y, int q) const { return f(q, x, y); }
+
+	const double get_fstar(int x, int y, int q) const { return fstar(q, x, y); }
+
 	double get_total_density() const;
 	const pba::Vector2<double>& get_max_u() const;
+
+	const BounceBackHalfway& get_bounds() const { return _bounds; }
+	BounceBackHalfway& get_bounds() { return _bounds; }
 
 // Currently making data members public although that feels wrong for some reason
 public:
@@ -38,6 +47,11 @@ public:
 	Array3D<double> f; // distribution function
 	// TODO -> consider removing fstar
 	Array3D<double> fstar; // intermediate distro function for ease of implementation
+
+private:
+	BounceBackHalfway _bounds;
+
+
 };
 
 

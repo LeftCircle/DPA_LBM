@@ -47,7 +47,7 @@ double LBMd2q9::advance(LBMData& data, const double t) const {
 }
 
 void LBMd2q9::_set_distribution_function_dimensions(LBMData& data) const {
-    if (data.n_qs() != N_LATTICE_POSITIONS){
+    if (data.n_qs() != N_LATTICE_POSITIONS) [[unlikely]] {
         data.resize_f_dimension(0, N_LATTICE_POSITIONS);
     }
 }
@@ -103,7 +103,7 @@ void LBMd2q9::compute_local_collisions(LBMData& data) const {
 }
 
 void LBMd2q9::propogate_to_neighbors(LBMData& data) const {
-    boundary_collision(data);
+    //boundary_collision(data);
     propogate_all_points(data);
 }
 
@@ -117,8 +117,8 @@ void LBMd2q9::boundary_collision(LBMData& data) const {
                         single_f_equilibrium(data.dens(x, y), data.u(x, y), q));
     };
     // Only having boundary condition with pressure gradient on sides
-    float inlet_pressure = 3.11;
-    float outlet_pressure = 3.0;
+    float inlet_pressure = 2.0;
+    float outlet_pressure = 1.0;
     #pragma omp parallel for num_threads(4)
     for (int j = 0; j < _y; j++){
         // left side
@@ -136,13 +136,20 @@ void LBMd2q9::boundary_collision(LBMData& data) const {
 void LBMd2q9::propogate_all_points(LBMData& data) const {
     const int _y = data.dimension(1);
     const int _x = data.dimension(0);
+    const auto& bounds = data.get_bounds();
     #pragma omp parallel for
     for (int j = 0; j < _y; j++){
         for (int i = 0; i < _x; i++){
             for (int q = 0; q < N_LATTICE_POSITIONS; q++){
+                if (bounds.is_blocked(i, j, q)) continue;
+
                 int ni = (i + static_cast<int>(_ci[q].X()) + data.dimension(0)) % data.dimension(0);
                 int nj = (j + static_cast<int>(_ci[q].Y()) + data.dimension(1)) % data.dimension(1);
-                data.f(q, ni, nj) = data.fstar(q, i, j);
+                if (bounds.is_blocked(ni, nj, q)){
+                    data.set_f(i, j, get_fi_minus(q), data.get_fstar(i, j, q));
+                } else {
+                    data.f(q, ni, nj) = data.fstar(q, i, j);
+                }
             }
         }
     }
