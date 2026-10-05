@@ -46,7 +46,6 @@ void LBMViewer2D::start_viewer(){
 void LBMViewer2D::tick(){
     _t = _solver->advance(*_data, _t);
     _color_pixels();
-    std::printf("Total density = %d\n", std::accumulate(_data->dens.begin(), _data->dens.end(), 0));
 }
 
 void LBMViewer2D::_display(void){

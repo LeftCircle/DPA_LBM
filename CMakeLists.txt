@@ -178,6 +178,10 @@ if(BUILD_TESTING)
         ${TEST_SOURCES}
     )
 
+    target_compile_definitions(dpalbm_tests PRIVATE
+        SOURCE_DIR="${CMAKE_SOURCE_DIR}"
+    )
+
     target_link_libraries(dpalbm_tests
         PRIVATE
             dpalbm

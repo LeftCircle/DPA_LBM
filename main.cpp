@@ -23,19 +23,19 @@ int main(int argc, char** argv){
             data->dens(i, j) = 1.05;
         }
     }
-    // float large_val = 1.0;
-    // data->dens(w / 2, h / 2) = large_val;
-    // data->dens(w / 4, h / 4) = large_val;
-    // data->dens(w / 4, 3 * h / 4) = large_val;
-    // data->dens(3 * w / 4, h / 4) = large_val;
-    // data->dens(3 * w / 4, 3 * h / 4) = large_val;
+    float large_val = 3.0;
+    data->dens(w / 2, h / 2) = large_val;
+    data->dens(w / 4, h / 4) = large_val;
+    data->dens(w / 4, 3 * h / 4) = large_val;
+    data->dens(3 * w / 4, h / 4) = large_val;
+    data->dens(3 * w / 4, 3 * h / 4) = large_val;
 
     // Block a square in the middle
-    for (int j = (2*h / 5); j < (3 * h / 5); j++){
-        for (int i = (19*w / 40); i < (21 * w / 40); i++){
-            data->get_bounds().block(i, j);
-        }
-    }
+    // for (int j = (2*h / 5); j < (3 * h / 5); j++){
+    //     for (int i = (19*w / 40); i < (21 * w / 40); i++){
+    //         data->get_bounds().block(i, j);
+    //     }
+    // }
 
     solver->set_to_equilibrium(*data);
 

@@ -1,5 +1,6 @@
 #include "lbmd2q9.h"
 
+#include <fstream>
 
 
 LBMd2q9::LBMd2q9(double dt, double tau, double w0) : _dt(dt) {
@@ -19,7 +20,7 @@ void LBMd2q9::set_dt(double dt) {
 void LBMd2q9::set_tau(double tau) {
     // viscoscity = c_s^2 ( tau - dt / 2), so since visc should always be > 0
     _tau = std::max(_dt / 2.0 + 0.01, tau);
-    _dt_over_tau = _dt / tau;
+    _dt_over_tau = _dt / _tau;
 }
 
 void LBMd2q9::set_speed_of_sound(double c_s){
@@ -43,6 +44,13 @@ double LBMd2q9::advance(LBMData& data, const double t) const {
     compute_moments(data);
     compute_local_collisions(data);
     propogate_to_neighbors(data);
+
+    // // log mass
+    std::ofstream out_mass("./build/output/mass_and_momentum.txt", std::ios::app);
+    auto total_mass = std::accumulate(data.dens.begin(), data.dens.end(), 0);
+    auto total_momentum = std::inner_product(data.dens.begin(), data.dens.end(), data.u.begin(), pba::Vector2<double>());
+    out_mass << t << " " << total_mass << " (" << total_momentum.X() << ", " << total_momentum.Y() << ")" << "\n"; 
+
     return t + _dt;
 }
 
