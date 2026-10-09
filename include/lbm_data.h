@@ -40,6 +40,8 @@ public:
 	const BounceBackHalfway& get_bounds() const { return _bounds; }
 	BounceBackHalfway& get_bounds() { return _bounds; }
 
+	double get_vorticity(int x, int y) const;
+
 // Currently making data members public although that feels wrong for some reason
 public:
 	Array2D<double> dens;

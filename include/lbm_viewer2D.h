@@ -11,8 +11,9 @@ namespace dpalbm{
 
 
 class LBMViewer2D{
-
+    
 public:
+    enum Views{DENSITY, VORTICITY};
     
     LBMViewer2D(const std::shared_ptr<LBMData> data, const std::shared_ptr<LBMd2q9> solver);
 
@@ -29,9 +30,13 @@ public:
 
     void reset();
     
+    void set_view(Views view) { _view = view; }
+    
     
 private:
     void _color_pixels();
+    void _color_density();
+    void _color_vorticity();
     void _init_viewer();
     void _display();
     void _keyboard(unsigned char key, int x, int y);
@@ -56,7 +61,7 @@ private:
         _active_viewer->_keyboard(key, x, y);
     }}
     
-
+    int _view = Views::DENSITY;
 
 };
 

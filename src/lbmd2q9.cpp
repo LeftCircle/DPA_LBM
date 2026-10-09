@@ -9,6 +9,9 @@ LBMd2q9::LBMd2q9(double dt, double tau, double w0) : _dt(dt) {
     set_tau(tau);
     double visc = _c_s * _c_s * (_tau - _dt * 0.5);
     printf("Shear viscoscity is %f\n", visc);
+    std::ofstream out_mass("./build/output/mass_and_momentum.txt", std::ios::trunc);
+    out_mass << "";
+
 }
 
 // triggers a lot of changes. Tau, dt, and velocities will be auto adjusted. 
@@ -47,7 +50,7 @@ double LBMd2q9::advance(LBMData& data, const double t) const {
     propogate_to_neighbors(data);
 
     // // log mass
-    std::ofstream out_mass("./build/output/mass_and_momentum.txt", std::ios::app);
+    std::ofstream out_mass("./build/output/mass_and_momentum.txt", std::ios::app);//, std::ios::app);
     auto total_mass = std::accumulate(data.dens.begin(), data.dens.end(), 0);
     auto total_momentum = std::inner_product(data.dens.begin(), data.dens.end(), data.u.begin(), pba::Vector2<double>());
     out_mass << t << " " << total_mass << " (" << total_momentum.X() << ", " << total_momentum.Y() << ")" << "\n"; 
@@ -74,7 +77,12 @@ void LBMd2q9::compute_moments(LBMData& data) const {
                 double x = (f(1, i, j) + f(5, i, j) + f(8, i, j) - (f(3,i,j) + f(6,i,j) + f(7,i,j))) / data.dens(i,j); 
                 double y = (f(2, i, j) + f(5, i, j) + f(6, i, j) - (f(4,i,j) + f(7,i,j) + f(8,i,j))) / data.dens(i,j);
                 // data.u(i, j).set(x, y);
-                data.u(i, j) = pba::vec2d(x, y) + data.get_force(x, y) * _dt * 0.5 * data.dens(i, j);
+
+                // TODO -> the correct term should have a Force / dens term,  but that seems to crash things
+                data.set_velocity(i, j, pba::vec2d(x, y) + data.get_force(x, y) * _dt * 0.5);
+                // double x = (f(1, i, j) + f(5, i, j) + f(8, i, j) - (f(3,i,j) + f(6,i,j) + f(7,i,j))); 
+                // double y = (f(2, i, j) + f(5, i, j) + f(6, i, j) - (f(4,i,j) + f(7,i,j) + f(8,i,j)));
+                // data.u(i, j) = (pba::vec2d(x, y) + data.get_force(x, y) * _dt * 0.5) / data.dens(i, j);
             }
         }
     }
@@ -117,6 +125,8 @@ void LBMd2q9::compute_local_collisions(LBMData& data) const {
 void LBMd2q9::propogate_to_neighbors(LBMData& data) const {
     //boundary_collision(data);
     propogate_all_points(data);
+    //zero_gradient_outlet(data);
+    //zou_he_velocity_inlet(data);
 }
 
 
@@ -143,6 +153,46 @@ void LBMd2q9::boundary_collision(LBMData& data) const {
         data.fstar(6, _x - 1, j) = bound_coll_i(1, j, 6, outlet_pressure);
         data.fstar(7, _x - 1, j) = bound_coll_i(1, j, 7, outlet_pressure);
     }
+}
+
+void LBMd2q9::zero_gradient_outlet(LBMData& data) const {
+    const int _y = data.dimension(1);
+    const int _x = data.dimension(0);
+    // The goal is zero gradient between the last two columnns
+    // (Might be better to copy density and u over instead of just fstar)
+    #pragma omp parallel for num_threads(4)
+    for (int j = 0; j < _y; j++){
+        for (int q = 0; q < N_LATTICE_POSITIONS; q++){
+            data.set_f(_x - 1, j, q, data.get_f(_x - 2, j, q));
+        }
+    }
+}
+
+void LBMd2q9::zou_he_velocity_inlet(LBMData& data) const{
+    // const int ny = data.dimension(1);
+
+    // int known_pops[6] = {0, 2, 3, 4, 6, 7};
+    // // fixed imposed velocity
+    // auto ux = 1.0;
+    // auto uy = 0.0;
+    // for (int j = 0; j < ny; j++){
+    //     // 1, 5, and 8 are unknown
+    //     // reconstruct dens from known populations
+    //     double dens = 0;
+    //     for (int q = 0; q < 6; q++){
+    //         dens += data.get_f(0, j, q);
+    //     }
+    //     const double f2 = data.get_f(0, y, 2);
+    //     const double f3 = data.get_f(0, y, 3);
+    //     const double f4 = data.get_f(0, y, 4);
+    //     const double f6 = data.get_f(0, y, 6);
+    //     const double f7 = data.get_f(0, y, 7);
+    //     dens /= (1.0 - ux);
+    //     data.set_f(0, y, 1, f3 + 2.0 / 3.0 * dens * ux);
+    //     data.set_f(0, y, 5, f7 + 0.5 * (f4 - f2) + 1.0 / 6.0 * dens * ux + 0.5 * dens * uy);
+    //     data.set_f(0, y, 8, f6 + 0.5 * (f2 - f4) + (1.0 / 6.0) * dens * ux - 0.5 * dens * uy);
+    // }
+
 }
 
 void LBMd2q9::propogate_all_points(LBMData& data) const {

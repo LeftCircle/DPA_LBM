@@ -38,3 +38,19 @@ const pba::Vector2<double>& LBMData::get_max_u() const {
     return *max_vel;
 
 }
+
+double LBMData::get_vorticity(int x, int y) const {
+    // vort is du_y / dx - du_x / dy
+    // So we need the neighbor positions
+    y = std::clamp(y, 1, dimension(1) - 2);
+    x = std::clamp(x, 1, dimension(0) - 2);
+    auto up_vel = velocity(x, y + 1);
+    auto below_vel = velocity(x, y - 1);
+    auto left_vel = velocity(x - 1, y);
+    auto right_vel = velocity(x + 1, y);
+
+    double duy_over_dx = (right_vel[1] - left_vel[1]) / 2.0;
+    double dux_over_dy = (up_vel[0] - below_vel[0]) / 2.0;
+    return duy_over_dx - dux_over_dy;
+
+}

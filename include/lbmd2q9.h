@@ -67,6 +67,8 @@ public:
 	void propogate_all_points(LBMData& data) const;
 	void propogate_periodic_boundary_points(LBMData& data) const;
 	void boundary_collision(LBMData& data) const;
+	void zero_gradient_outlet(LBMData& data) const;
+	void zou_he_velocity_inlet(LBMData& data) const;
 	constexpr int get_fi_minus(int q) const { return _fi_minus[q]; };
 	
 private:

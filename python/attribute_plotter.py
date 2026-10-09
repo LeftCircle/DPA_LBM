@@ -19,41 +19,66 @@ def parse_line(raw_line: str, fallback_time: float | None = None):
     if not line or line.startswith("#"):
         return None
 
-    # Case 1: "mass(px, py)"  -> no explicit time
-    # Case 2: "time mass(px, py)" -> explicit time
-    # Case 3: "time mass px" -> older format
+    # Handle mass (px, py) and time mass (px, py), with optional spaces.
+    tuple_match = re.search(r"\(\s*([^,]+),\s*([^)]+)\s*\)\s*$", line)
+    if tuple_match:
+        prefix = line[:tuple_match.start()].split()
+        if len(prefix) == 1:
+            t = fallback_time if fallback_time is not None else 0.0
+            mass = parse_scalar_float(prefix[0])
+        elif len(prefix) == 2:
+            t = parse_scalar_float(prefix[0])
+            mass = parse_scalar_float(prefix[1])
+        else:
+            raise ValueError(f"Bad line format: {raw_line!r}")
+
+        px = parse_scalar_float(tuple_match.group(1))
+        py = parse_scalar_float(tuple_match.group(2))
+        return t, mass, math.hypot(px, py)
+
+    # Older format: time mass momentum
     parts = line.split()
-
-    if len(parts) == 1:
-        m = re.fullmatch(r"([+-]?(?:\d+\.\d*|\d*\.\d+|\d+)(?:[eE][+-]?\d+)?)\(([^,]+),\s*([^)]+)\)", parts[0])
-        if not m:
-            raise ValueError(f"Bad line format: {raw_line!r}")
-        mass = parse_scalar_float(m.group(1))
-        px = parse_scalar_float(m.group(2))
-        py = parse_scalar_float(m.group(3))
-        t = fallback_time if fallback_time is not None else 0.0
-        return t, mass, math.hypot(px, py)
-
-    if len(parts) == 2:
-        # time mass(px, py)
-        t = parse_scalar_float(parts[0])
-        rest = parts[1]
-        m = re.fullmatch(r"([+-]?(?:\d+\.\d*|\d*\.\d+|\d+)(?:[eE][+-]?\d+)?)\(([^,]+),\s*([^)]+)\)", rest)
-        if not m:
-            raise ValueError(f"Bad line format: {raw_line!r}")
-        mass = parse_scalar_float(m.group(1))
-        px = parse_scalar_float(m.group(2))
-        py = parse_scalar_float(m.group(3))
-        return t, mass, math.hypot(px, py)
-
     if len(parts) == 3:
-        # time mass momentum
-        t = parse_scalar_float(parts[0])
-        mass = parse_scalar_float(parts[1])
-        momentum = parse_scalar_float(parts[2])
+        t, mass, momentum = map(parse_scalar_float, parts)
         return t, mass, momentum
 
     raise ValueError(f"Bad line format: {raw_line!r}")
+
+    # Case 1: "mass(px, py)"  -> no explicit time
+    # Case 2: "time mass(px, py)" -> explicit time
+    # Case 3: "time mass px" -> older format
+    # parts = line.split()
+
+    # if len(parts) == 1:
+    #     m = re.fullmatch(r"([+-]?(?:\d+\.\d*|\d*\.\d+|\d+)(?:[eE][+-]?\d+)?)\(([^,]+),\s*([^)]+)\)", parts[0])
+    #     if not m:
+    #         raise ValueError(f"Bad line format: {raw_line!r}")
+    #     mass = parse_scalar_float(m.group(1))
+    #     px = parse_scalar_float(m.group(2))
+    #     py = parse_scalar_float(m.group(3))
+    #     t = fallback_time if fallback_time is not None else 0.0
+    #     return t, mass, math.hypot(px, py)
+
+    # if len(parts) == 2:
+    #     # time mass(px, py)
+    #     t = parse_scalar_float(parts[0])
+    #     rest = parts[1]
+    #     m = re.fullmatch(r"([+-]?(?:\d+\.\d*|\d*\.\d+|\d+)(?:[eE][+-]?\d+)?)\(([^,]+),\s*([^)]+)\)", rest)
+    #     if not m:
+    #         raise ValueError(f"Bad line format: {raw_line!r}")
+    #     mass = parse_scalar_float(m.group(1))
+    #     px = parse_scalar_float(m.group(2))
+    #     py = parse_scalar_float(m.group(3))
+    #     return t, mass, math.hypot(px, py)
+
+    # if len(parts) == 3:
+    #     # time mass momentum
+    #     t = parse_scalar_float(parts[0])
+    #     mass = parse_scalar_float(parts[1])
+    #     momentum = parse_scalar_float(parts[2])
+    #     return t, mass, momentum
+
+    # raise ValueError(f"Bad line format: {raw_line!r}")
 
 
 def parse_data_file(path: Path):
