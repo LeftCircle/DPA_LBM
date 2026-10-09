@@ -30,12 +30,25 @@ int main(int argc, char** argv){
     data->dens(3 * w / 4, h / 4) = large_val;
     data->dens(3 * w / 4, 3 * h / 4) = large_val;
 
+
+    // set gravity forces
+    for (int j = 0; j < data->dimension(1); j++){
+        for (int i = 0; i < data->dimension(0); i++){
+            data->set_force(i, j, pba::vec2d(0, -0.0025));
+        }
+    }
     // Block a square in the middle
     // for (int j = (2*h / 5); j < (3 * h / 5); j++){
     //     for (int i = (19*w / 40); i < (21 * w / 40); i++){
     //         data->get_bounds().block(i, j);
     //     }
     // }
+    for (int i = 0; i < w; i++){
+        data->get_bounds().block(i, 0);
+        data->get_bounds().block(i, 1);
+        data->get_bounds().block(i, h - 1);
+        data->get_bounds().block(i, h - 2);
+    }
 
     solver->set_to_equilibrium(*data);
 

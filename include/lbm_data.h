@@ -28,7 +28,11 @@ public:
 	void set_f(int x, int y, int q, double val) { f(q, x, y) = val; }
 	const double get_f(int x, int y, int q) const { return f(q, x, y); }
 
+	void set_fstar(int x, int y, int q, double val) { fstar(q, x, y) = val; }
 	const double get_fstar(int x, int y, int q) const { return fstar(q, x, y); }
+
+	const auto get_force(int x, int y) const { return _Force(x, y); }
+	void set_force(int x, int y, pba::vec2d f) { _Force(x, y) = f; }
 
 	double get_total_density() const;
 	const pba::Vector2<double>& get_max_u() const;
@@ -50,7 +54,7 @@ public:
 
 private:
 	BounceBackHalfway _bounds;
-
+	Array2D<pba::vec2d> _Force;
 
 };
 

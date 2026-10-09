@@ -42,7 +42,27 @@ public:
 	double compute_max_mach_number(const pba::Vector2<double>& max_vel) const;
 	double estimate_reynolds_number(const pba::Vector2<double>& max_vel, float macroscopic_scale) const;
 	double get_shear_viscoscity() const;
-	
+	double compute_collision_operator(
+		LBMData& data,
+		int x,
+		int y,
+		int i
+	) const;
+
+	double compute_force_source_term(
+		const pba::vec2d& F,
+		const pba::vec2d& u,
+		int i
+	) const;
+
+	// used to calculate f_star with local collision and forces
+	double local_collision_and_source(
+		LBMData& data,
+		int x, 
+		int y,
+		int q
+	) const;
+
 	void propogate_interior_points(LBMData& data) const;
 	void propogate_all_points(LBMData& data) const;
 	void propogate_periodic_boundary_points(LBMData& data) const;

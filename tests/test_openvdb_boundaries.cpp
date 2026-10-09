@@ -1,5 +1,5 @@
 #include "catch_helpers.h"
-#include <openvdb/openvdb.h>
+// #include <openvdb/openvdb.h>
 
 
 
@@ -10,7 +10,7 @@
 
 
 TEST_CASE("test setting and finding border cells"){
-    openvdb::initialize();
+    // openvdb::initialize();
 
     int n_lattice_points = 9;
     LBMData data(10, 10, n_lattice_points);

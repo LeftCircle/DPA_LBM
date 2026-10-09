@@ -33,12 +33,15 @@ include(CTest)
 # Image Processing
 # ------------------------------------------------------------
 
-set(IMAGE_PROCESSING_DEPS_ROOT
-    "/home/left/local"
-    #"/home/leftcircle/programming"
-    CACHE PATH
-    "Prefix containing include/ and lib/ for OpenImageIO/OpenEXR"
-)
+# set(IMAGE_PROCESSING_DEPS_ROOT
+#     "/home/left/local"
+#     #"/home/leftcircle/programming"
+#     CACHE PATH
+#     "Prefix containing include/ and lib/ for OpenImageIO/OpenEXR"
+# )
+
+set(OpenImageIO_ROOT "$ENV{HOME}/local/openimageio" CACHE PATH "")
+set(OpenEXR_ROOT "$ENV{HOME}/local/openexr" CACHE PATH "")
 
 set(IMAGE_PROCESSING_BUILD_VIEWER ON CACHE BOOL "" FORCE)
 set(IMAGE_PROCESSING_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -54,21 +57,21 @@ add_subdirectory(
 # OpenVDB
 # ------------------------------------------------------------
 
-set(OpenVDB_ROOT
-    "/home/left/local"
-    CACHE PATH
-    "OpenVDB installation prefix"
-)
+# set(OpenVDB_ROOT
+#     "/home/left/local"
+#     CACHE PATH
+#     "OpenVDB installation prefix"
+# )
 
-# OpenVDB installs FindOpenVDB.cmake here.
-list(PREPEND CMAKE_MODULE_PATH
-    "${OpenVDB_ROOT}/lib/cmake/OpenVDB"
-    "${OpenVDB_ROOT}/lib64/cmake/OpenVDB"
-)
+# # OpenVDB installs FindOpenVDB.cmake here.
+# list(PREPEND CMAKE_MODULE_PATH
+#     "${OpenVDB_ROOT}/lib/cmake/OpenVDB"
+#     "${OpenVDB_ROOT}/lib64/cmake/OpenVDB"
+# )
 
-list(PREPEND CMAKE_PREFIX_PATH
-    "${OpenVDB_ROOT}"
-)
+# list(PREPEND CMAKE_PREFIX_PATH
+#     "${OpenVDB_ROOT}"
+# )
 
 
 # ------------------------------------------------------------
@@ -111,7 +114,7 @@ list(PREPEND CMAKE_PREFIX_PATH
 # Core LBM Things!
 # ------------------------------------------------------------
 
-find_package(OpenVDB REQUIRED)
+# find_package(OpenVDB REQUIRED)
 find_package(Boost REQUIRED)
 
 file(GLOB_RECURSE DPALBM_SOURCES CONFIGURE_DEPENDS
@@ -138,7 +141,7 @@ target_link_libraries(dpalbm
     PUBLIC
         OpenMP::OpenMP_CXX
         image_processing
-        OpenVDB::openvdb
+        # OpenVDB::openvdb
         Boost::headers
 )
 
