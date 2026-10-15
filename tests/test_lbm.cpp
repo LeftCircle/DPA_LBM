@@ -129,12 +129,12 @@ TEST_CASE("Test configurable solver"){
 
     // Now let's add the most basic substeps 
     LocalCollision lc(lattice, data);
-    Propogation propogation(lattice, data); // Boundary propogation can be split up as well, but save that for another unit test. Should just follow right after local propocation
+    Propogation propogation(lattice, data); 
     AdvanceTime advance_t(lattice, data);
     MomentUpdate moment_update(lattice, data);
     Equilibrium equilibrium(lattice, data);
 
-    LBMSystem SolverSystem(lc, propogation, advance_t, moment_update, equilibrium);
+    SolverSystem SolverSystem(lc, propogation, advance_t, moment_update, equilibrium);
 
 
 }

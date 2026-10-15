@@ -1,6 +1,7 @@
 #ifndef _LBM_DATA_H
 #define _LBM_DATA_H
 
+#include <execution>
 #include <memory>
 
 #include "tessendorf_vecendorf.h"
@@ -45,6 +46,21 @@ public:
 	BounceBackHalfway& get_bounds() { return _bounds; }
 
 	double get_vorticity(int x, int y) const;
+	
+	template<typename Func>
+	void for_each(Func func, const int n_lattice_points){
+		const int _y = data.dimension(1);
+    	const int _x = data.dimension(0);
+		const int n_q = n_qs();
+		#pragma omp parallel for
+		for (int j = 0; j < _y; j++){
+        	for (int i = 0; i < _x; i++){
+				for (int q = 0; q < n_q; q++){
+
+				}
+			}
+		}
+	}
 
 // Currently making data members public although that feels wrong for some reason
 public:
