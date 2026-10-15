@@ -79,7 +79,7 @@ void LBMd2q9::compute_moments(LBMData& data) const {
                 // data.u(i, j).set(x, y);
 
                 // TODO -> the correct term should have a Force / dens term,  but that seems to crash things
-                data.set_velocity(i, j, pba::vec2d(x, y) + data.get_force(x, y) * _dt * 0.5);
+                data.set_velocity(i, j, pba::vec2d(x, y) + data.get_acceleration(x, y) * _dt * 0.5);
                 // double x = (f(1, i, j) + f(5, i, j) + f(8, i, j) - (f(3,i,j) + f(6,i,j) + f(7,i,j))); 
                 // double y = (f(2, i, j) + f(5, i, j) + f(6, i, j) - (f(4,i,j) + f(7,i,j) + f(8,i,j)));
                 // data.u(i, j) = (pba::vec2d(x, y) + data.get_force(x, y) * _dt * 0.5) / data.dens(i, j);
@@ -115,7 +115,6 @@ void LBMd2q9::compute_local_collisions(LBMData& data) const {
             const auto& u = data.u(i, j);
             for (int q = 0; q < N_LATTICE_POSITIONS; q++){
                 //data.fstar(q, i, j) = data.f(q, i, j) - _dt_over_tau * (data.f(q, i, j) - single_f_equilibrium(dens, u, q));
-                //data.set_fstar(i, j, q, local_collision_and_source(data, i, j, q)); 
                 data.fstar(q, i, j) = local_collision_and_source(data, i, j, q);
             }
         }
@@ -125,7 +124,7 @@ void LBMd2q9::compute_local_collisions(LBMData& data) const {
 void LBMd2q9::propogate_to_neighbors(LBMData& data) const {
     //boundary_collision(data);
     propogate_all_points(data);
-    //zero_gradient_outlet(data);
+    zero_gradient_outlet(data);
     //zou_he_velocity_inlet(data);
 }
 
@@ -281,7 +280,7 @@ double LBMd2q9::local_collision_and_source(
     int q
 ) const {
     auto collision_op = compute_collision_operator(data, x, y, q);
-    auto F = data.get_force(x, y) * data.dens(x, y);
+    auto F = data.get_acceleration(x, y) * data.dens(x, y);
     auto source = compute_force_source_term(F, data.u(x, y), q);
     return data.get_f(x, y, q) + (collision_op + source) * _dt;
 }

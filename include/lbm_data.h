@@ -1,9 +1,13 @@
 #ifndef _LBM_DATA_H
 #define _LBM_DATA_H
 
+#include <memory>
+
 #include "tessendorf_vecendorf.h"
 #include "nd_vector.h"
 #include "bounce_back_halfway.h"
+
+namespace dpa_lbm{
 
 class LBMData{
 public:
@@ -31,8 +35,8 @@ public:
 	void set_fstar(int x, int y, int q, double val) { fstar(q, x, y) = val; }
 	const double get_fstar(int x, int y, int q) const { return fstar(q, x, y); }
 
-	const auto get_force(int x, int y) const { return _Force(x, y); }
-	void set_force(int x, int y, pba::vec2d f) { _Force(x, y) = f; }
+	const auto get_acceleration(int x, int y) const { return _acceleration(x, y); }
+	void set_acceleration(int x, int y, pba::vec2d f) { _acceleration(x, y) = f; }
 
 	double get_total_density() const;
 	const pba::Vector2<double>& get_max_u() const;
@@ -56,10 +60,14 @@ public:
 
 private:
 	BounceBackHalfway _bounds;
-	Array2D<pba::vec2d> _Force;
+	Array2D<pba::vec2d> _acceleration;
 
 };
 
 
+using LBMDataPtr = std::shared_ptr<LBMData>;
+
+
+} // end namespace dpa_lbm
 
 #endif

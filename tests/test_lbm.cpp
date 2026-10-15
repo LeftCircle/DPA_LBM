@@ -113,3 +113,28 @@ TEST_CASE("test hand solution"){
     // NOTE -> if this fails it is likely due to boundary collisions
     REQUIRE(n_nonzeros == 9);
 }
+
+TEST_CASE("Test configurable solver"){
+    // LBM solvers should be configurable so that we can add/remove boundary conditions, forces, etc. 
+    // Each substep can take the solver data (n lattice points, weights, velocities), and the LBM data
+    // fi, dens, u, acceleration. Then the system should chug through a timestep and all is well. 
+    double dt = 1.0;
+    double tau = 1.0;
+
+    LBMData data(3, 3, 9); // our classic 3x3 grid for d2q9
+    LBMd2q9 lattice(dt, tau);
+
+    data.set_all_density(1.0);
+    lattice.set_to_equilibrium(data);
+
+    // Now let's add the most basic substeps 
+    LocalCollision lc(lattice, data);
+    Propogation propogation(lattice, data); // Boundary propogation can be split up as well, but save that for another unit test. Should just follow right after local propocation
+    AdvanceTime advance_t(lattice, data);
+    MomentUpdate moment_update(lattice, data);
+    Equilibrium equilibrium(lattice, data);
+
+    LBMSystem SolverSystem(lc, propogation, advance_t, moment_update, equilibrium);
+
+
+}

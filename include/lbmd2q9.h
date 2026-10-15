@@ -1,14 +1,29 @@
 #ifndef _LBMD2Q9_H
 #define _LBMD2Q9_H
 
+#include <memory>
+
 #include "tessendorf_vecendorf.h"
 #include "nd_vector.h"
 #include "lbm_data.h"
 #include "algorithm"
 #include "numeric"
 
+namespace dpa_lbm{
 
-class LBMd2q9{
+// Base class for lattice structures.  
+// TO DO-> fill out pure virtual funcs such as get_weight or get_velocity, etc
+// Also template on vector type?
+class LBMLattice {
+public:
+
+protected:
+
+};
+
+using LBMLatticePtr = std::shared_ptr<LBMLattice>;
+
+class LBMd2q9 : public LBMLattice{
 public:
 	static constexpr int N_LATTICE_POSITIONS = 9;
 	static constexpr double DEFAULT_w0 = 4.0 / 9.0;
@@ -69,6 +84,7 @@ public:
 	void boundary_collision(LBMData& data) const;
 	void zero_gradient_outlet(LBMData& data) const;
 	void zou_he_velocity_inlet(LBMData& data) const;
+
 	constexpr int get_fi_minus(int q) const { return _fi_minus[q]; };
 	
 private:
@@ -100,6 +116,6 @@ private:
 };
 
 
-
+} // end namespace dpa_lbm
 
 #endif
