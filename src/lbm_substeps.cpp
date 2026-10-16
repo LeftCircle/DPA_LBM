@@ -5,6 +5,12 @@
 namespace dpa_lbm{
 
 
+void SolverSystem::solve(){
+    for (const auto& solver : _solvers){
+        solver->solve();
+    }
+}
+
 double single_f_equilibrium(
     const LBMLattice& lattice,
     const double dens,

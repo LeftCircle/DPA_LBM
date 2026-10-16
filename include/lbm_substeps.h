@@ -81,7 +81,6 @@ private:
     BounceBackHalfway _bounds;
 };
 
-
 class SolverSystem{
 public:
     template <typename... SolverType>
@@ -93,6 +92,8 @@ public:
             "Each solver must inherit from LBMPartialSolver"
         );
     }
+
+    void solve();
 
 
 private:

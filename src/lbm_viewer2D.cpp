@@ -8,8 +8,12 @@ namespace dpa_lbm{
 LBMViewer2D* LBMViewer2D::_active_viewer = nullptr;
 
 
-LBMViewer2D::LBMViewer2D(const std::shared_ptr<LBMData> data, const std::shared_ptr<LBMd2q9> solver) :
-    _data(std::move(data)), _solver(std::move(solver)) {
+LBMViewer2D::LBMViewer2D(
+    std::shared_ptr<LBMData> data,
+    std::shared_ptr<LBMd2q9> solver,
+    std::shared_ptr<SolverSystem> sys
+) :
+    _data(data), _solver(solver), _solver_system(sys) {
         _img.set_dimensions(_data->dimension(0), _data->dimension(1), 3);
         _total_density = _data->get_total_density();
         tick();
@@ -44,7 +48,8 @@ void LBMViewer2D::start_viewer(){
 }
 
 void LBMViewer2D::tick(){
-    _t = _solver->advance(*_data, _t);
+    //_t = _solver->advance(*_data, _t);
+    _solver_system->solve();
     _color_pixels();
 }
 

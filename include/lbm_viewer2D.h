@@ -6,6 +6,7 @@
 #include "lbmd2q9.h"
 #include "lbm_data.h"
 #include "color.h"
+#include "lbm_substeps.h"
 
 namespace dpa_lbm{
 
@@ -15,7 +16,11 @@ class LBMViewer2D{
 public:
     enum Views{DENSITY, VORTICITY};
     
-    LBMViewer2D(const std::shared_ptr<LBMData> data, const std::shared_ptr<LBMd2q9> solver);
+    LBMViewer2D(
+        std::shared_ptr<LBMData> data,
+        std::shared_ptr<LBMd2q9> solver,
+        std::shared_ptr<SolverSystem> sys
+    );
 
     void start_viewer();
     // Uses the solver to advance lbm data based on solver properties.
@@ -49,6 +54,7 @@ private:
     
     std::shared_ptr<LBMData> _data;
     std::shared_ptr<LBMd2q9> _solver;
+    std::shared_ptr<SolverSystem> _solver_system;
     ImageData _img;
     float _total_density;
     float _estimated_max_speed;

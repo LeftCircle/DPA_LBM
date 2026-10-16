@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include "lbm_viewer2D.h"
+#include "lbm_substeps.h"
 
 using namespace dpa_lbm;
 
@@ -59,18 +60,28 @@ int main(int argc, char** argv){
     //     }
     // }
 
+    // Create the solver system
+    auto d = std::shared_ptr<LBMData>(data);
+    auto lattice = std::shared_ptr<LBMd2q9>(solver);
+    auto local_coll = std::make_shared<LocalCollisionWithForce>(lattice, d);
+    auto periodic = std::make_shared<PeriodicPropagation>(lattice, d);
+    auto moment_up = std::make_shared<MomentUpdateD2Q9>(lattice, d);
+
+    auto sys = std::make_shared<SolverSystem>(local_coll, periodic, moment_up);
+
+
     // Top and bottom walls
-    for (int i = 0; i < w; i++){
-        data->get_bounds().block(i, 0);
-        data->get_bounds().block(i, 1);
-        data->get_bounds().block(i, h - 1);
-        data->get_bounds().block(i, h - 2);
-    }
+    // for (int i = 0; i < w; i++){
+    //     data->get_bounds().block(i, 0);
+    //     data->get_bounds().block(i, 1);
+    //     data->get_bounds().block(i, h - 1);
+    //     data->get_bounds().block(i, h - 2);
+    // }
 
     solver->set_to_equilibrium(*data);
 
     
-    LBMViewer2D viewer(data, solver);
+    LBMViewer2D viewer(data, solver, sys);
     //viewer.set_min_color(Color(0, 0, 1));
     //viewer.set_max_color(Color(1, 0, 0));
     viewer.start_viewer();
