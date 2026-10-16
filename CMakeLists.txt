@@ -116,6 +116,7 @@ add_subdirectory(
 
 # find_package(OpenVDB REQUIRED)
 find_package(Boost REQUIRED)
+find_package(TBB CONFIG REQUIRED)
 
 file(GLOB_RECURSE DPALBM_SOURCES CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
@@ -143,6 +144,7 @@ target_link_libraries(dpalbm
         image_processing
         # OpenVDB::openvdb
         Boost::headers
+        TBB::tbb
 )
 
 add_executable(dpa_lbm_fluids

@@ -3,8 +3,15 @@
 #include <iostream>
 #include <fstream>
 
+namespace dpa_lbm{
 
-LBMd2q9::LBMd2q9(double dt, double tau, double w0) : _dt(dt) {
+LBMLattice::LBMLattice(double dt, double tau) : _dt(dt) {
+    _set_speed_of_sound_from_dx_dt();
+    set_tau(tau);
+}
+
+LBMd2q9::LBMd2q9(double dt, double tau, double w0) : LBMLattice(dt, tau) {
+    _n_lattice_positions = 9;
     _set_speed_of_sound_from_dx_dt();
     set_tau(tau);
     double visc = _c_s * _c_s * (_tau - _dt * 0.5);
@@ -15,13 +22,13 @@ LBMd2q9::LBMd2q9(double dt, double tau, double w0) : _dt(dt) {
 }
 
 // triggers a lot of changes. Tau, dt, and velocities will be auto adjusted. 
-void LBMd2q9::set_dt(double dt) {
+void LBMLattice::set_dt(double dt) {
     _dt = dt;
     set_tau(_tau);
     _set_speed_of_sound_from_dx_dt();
 }
 
-void LBMd2q9::set_tau(double tau) {
+void LBMLattice::set_tau(double tau) {
     // viscoscity = c_s^2 ( tau - dt / 2), so since visc should always be > 0
     _tau = std::max(_dt / 2.0 + 0.01, tau);
     _dt_over_tau = _dt / _tau;
@@ -34,10 +41,8 @@ void LBMd2q9::set_speed_of_sound(double c_s){
 }
 
 
-void LBMd2q9::_set_speed_of_sound_from_dx_dt() {
+void LBMLattice::_set_speed_of_sound_from_dx_dt() { 
     _c_s = (1.0 / std::sqrt(3.0)) * (_dx / _dt);
-    //printf("c_s set to %f\n", _c_s);
-    //_c_s = 1.0;
     _one_over_cs_squared = 1.0 / (_c_s * _c_s);
     _one_over_cs_fourth = _one_over_cs_squared * _one_over_cs_squared;
 }
@@ -100,7 +105,6 @@ double LBMd2q9::single_f_equilibrium(
         cu * cu * 0.5 * _one_over_cs_fourth - 
         uu * 0.5 * _one_over_cs_squared
     );
-
 }
 
 // I feel like this is the perfect use case for std::transform, but carrying the index that is used all the time is 
@@ -283,4 +287,7 @@ double LBMd2q9::local_collision_and_source(
     auto F = data.get_acceleration(x, y) * data.dens(x, y);
     auto source = compute_force_source_term(F, data.u(x, y), q);
     return data.get_f(x, y, q) + (collision_op + source) * _dt;
+}
+
+
 }

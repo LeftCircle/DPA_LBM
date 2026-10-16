@@ -7,7 +7,7 @@
 #include "lbmd2q9.h"
 #include "bounce_back_halfway.h"
 
-
+namespace dpa_lbm{
 
 TEST_CASE("test setting and finding border cells"){
     // openvdb::initialize();
@@ -67,4 +67,6 @@ TEST_CASE(" test blocked nodes don't stream"){
     REQUIRE(data.get_f(1, 0, 3) == 0);
     REQUIRE(data.get_f(1, 1, 6) == 0);
     REQUIRE(data.get_f(1, 2, 7) == 0);
+}
+
 }

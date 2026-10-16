@@ -39,6 +39,9 @@ public:
 	const auto get_acceleration(int x, int y) const { return _acceleration(x, y); }
 	void set_acceleration(int x, int y, pba::vec2d f) { _acceleration(x, y) = f; }
 
+	const auto get_density(int x, int y) const { return dens(x, y); }
+	void set_density(int x, int y, double d) { dens(x, y) = d; }
+
 	double get_total_density() const;
 	const pba::Vector2<double>& get_max_u() const;
 
@@ -47,17 +50,31 @@ public:
 
 	double get_vorticity(int x, int y) const;
 	
+	// For each i, j, q, do a function of args func(i, j, q);
 	template<typename Func>
-	void for_each(Func func, const int n_lattice_points){
-		const int _y = data.dimension(1);
-    	const int _x = data.dimension(0);
+	void for_each(Func func){
+		const int _y = dimension(1);
+    	const int _x = dimension(0);
 		const int n_q = n_qs();
 		#pragma omp parallel for
 		for (int j = 0; j < _y; j++){
         	for (int i = 0; i < _x; i++){
 				for (int q = 0; q < n_q; q++){
-
+					func(i, j, q);
 				}
+			}
+		}
+	}
+
+	// loops over every i, j, but not the lattice points
+	template<typename Func>
+	void for_each_node(Func func){
+		const int _y = dimension(1);
+    	const int _x = dimension(0);
+		#pragma omp parallel for
+		for (int j = 0; j < _y; j++){
+        	for (int i = 0; i < _x; i++){
+				func(i, j);
 			}
 		}
 	}

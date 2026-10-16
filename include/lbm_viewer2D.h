@@ -7,7 +7,7 @@
 #include "lbm_data.h"
 #include "color.h"
 
-namespace dpalbm{
+namespace dpa_lbm{
 
 
 class LBMViewer2D{
@@ -66,7 +66,7 @@ private:
 };
 
 
-} // end namespace dpalbm
+} // end namespace dpa_lbm
 
 
 

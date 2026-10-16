@@ -3,7 +3,7 @@
 
 
 
-namespace dpalbm{
+namespace dpa_lbm{
 
 LBMViewer2D* LBMViewer2D::_active_viewer = nullptr;
 
@@ -210,4 +210,4 @@ int LBMViewer2D::img_height() const {
 
 
 
-} // end namespace dpalbm
+} // end namespace dpa_lbm

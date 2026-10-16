@@ -5,7 +5,9 @@
 
 #include "lbm_data.h"
 #include "lbmd2q9.h"
+#include "lbm_substeps.h"
 
+namespace dpa_lbm{
 
 TEST_CASE("Test LBM info propogates"){
 
@@ -121,20 +123,21 @@ TEST_CASE("Test configurable solver"){
     double dt = 1.0;
     double tau = 1.0;
 
-    LBMData data(3, 3, 9); // our classic 3x3 grid for d2q9
-    LBMd2q9 lattice(dt, tau);
+    auto data = std::make_shared<LBMData>(3, 3, 9); // our classic 3x3 grid for d2q9
+    auto lattice = std::make_shared<LBMd2q9>(dt, tau);
+    
 
-    data.set_all_density(1.0);
-    lattice.set_to_equilibrium(data);
+    data->set_all_density(1.0);
+    lattice->set_to_equilibrium(*data);
 
     // Now let's add the most basic substeps 
-    LocalCollision lc(lattice, data);
-    Propogation propogation(lattice, data); 
-    AdvanceTime advance_t(lattice, data);
-    MomentUpdate moment_update(lattice, data);
-    Equilibrium equilibrium(lattice, data);
+    auto lc = std::make_shared<LocalCollision>(lattice, data);
+    auto propogation = std::make_shared<PeriodicPropagation>(lattice, data); 
+    auto moment_update = std::make_shared<MomentUpdateD2Q9>(lattice, data);
 
-    SolverSystem SolverSystem(lc, propogation, advance_t, moment_update, equilibrium);
+    SolverSystem SolverSystem(lc, propogation, moment_update);
 
+
+}
 
 }

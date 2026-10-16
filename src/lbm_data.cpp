@@ -1,11 +1,12 @@
 #include "lbm_data.h"
 #include <numeric>
 
+namespace dpa_lbm{
 
 LBMData::LBMData(int x_dims, int y_dims, int f_dims) : 
     dens(x_dims, y_dims), u(x_dims, y_dims), f(f_dims, x_dims, y_dims),
     fstar(f_dims, x_dims, y_dims), _bounds(x_dims, y_dims),
-    _Force(x_dims, y_dims) {}
+    _acceleration(x_dims, y_dims) {}
 
 
 void LBMData::set_all_density(double val){
@@ -52,5 +53,7 @@ double LBMData::get_vorticity(int x, int y) const {
     double duy_over_dx = (right_vel[1] - left_vel[1]) / 2.0;
     double dux_over_dy = (up_vel[0] - below_vel[0]) / 2.0;
     return duy_over_dx - dux_over_dy;
+
+}
 
 }

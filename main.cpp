@@ -2,7 +2,7 @@
 #include <iostream>
 #include "lbm_viewer2D.h"
 
-using namespace dpalbm;
+using namespace dpa_lbm;
 
 int main(int argc, char** argv){
     
@@ -34,7 +34,7 @@ int main(int argc, char** argv){
 
     // // left side forces
     for (int j = 0; j < data->dimension(1); j++){
-        data->set_force(0, j, pba::vec2d(0.001, 0));
+        data->set_acceleration(0, j, pba::vec2d(0.001, 0));
     }
     
     // Block a square in the middle
@@ -77,3 +77,4 @@ int main(int argc, char** argv){
 
     return 0;
 }
+

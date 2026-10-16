@@ -12,13 +12,42 @@
 namespace dpa_lbm{
 
 // Base class for lattice structures.  
-// TO DO-> fill out pure virtual funcs such as get_weight or get_velocity, etc
-// Also template on vector type?
+// TO DO-> template on vector type
 class LBMLattice {
 public:
+	LBMLattice(double dt, double tau);
+
+	double dt() const noexcept { return _dt; }
+	double dt_over_tau() const noexcept { return _dt_over_tau; }
+	double one_over_cs_squared() const noexcept { return _one_over_cs_squared; }
+	double one_over_cs_fourth() const noexcept { return _one_over_cs_fourth; }
+	double tau() const noexcept { return _tau; }
+	double c_s() const noexcept { return _c_s; }
+	int n_lattice_positions() const noexcept { return _n_lattice_positions; }
+
+	// TODO -> these could be base with each child class
+	// instantializing std::vectors
+	virtual pba::vec2d get_velocity(int i) const = 0;
+	virtual double get_weight(int i) const = 0;
+
+	virtual int get_fi_minus(int q) const = 0; 
+
+
+	void set_dt(double dt);
+	void set_tau(double tau);
 
 protected:
+	void _set_speed_of_sound_from_dx_dt();
 
+protected:
+	const double _dx = 1.0; // dx in lattice space. fixed to 1 since c_i and dt are based on dx
+	double _dt;
+	double _c_s; // speed of sound
+	double _one_over_cs_squared;
+	double _one_over_cs_fourth;
+	double _tau; // relaxation time
+	double _dt_over_tau;
+	int _n_lattice_positions;
 };
 
 using LBMLatticePtr = std::shared_ptr<LBMLattice>;
@@ -31,14 +60,15 @@ public:
 public:
 	LBMd2q9(double dt, double tau, double w_0 = DEFAULT_w0);
 
-	void set_dt(double dt);
-	void set_tau(double tau);
+	
 	void set_weight0(double w0);
 	void set_speed_of_sound(double c_s);
 
 	double get_tau() const { return _tau; }
 	double get_speed_of_sound() const { return _c_s; }
-
+	
+	pba::vec2d get_velocity(int i) const override { return _ci[i]; }
+	double get_weight(int i) const override { return _weights[i]; }
 
 	double advance(LBMData& data, const double t) const;
 
@@ -85,20 +115,13 @@ public:
 	void zero_gradient_outlet(LBMData& data) const;
 	void zou_he_velocity_inlet(LBMData& data) const;
 
-	constexpr int get_fi_minus(int q) const { return _fi_minus[q]; };
+	int get_fi_minus(int q) const override { return _fi_minus[q]; };
 	
 private:
-	void _set_speed_of_sound_from_dx_dt();
 	void _set_distribution_function_dimensions(LBMData& data) const;
 
 private:
-	const double _dx = 1.0; // dx in lattice space. fixed to 1 since c_i and dt are based on dx
-	double _dt;
-	double _c_s; // speed of sound
-	double _one_over_cs_squared;
-	double _one_over_cs_fourth;
-	double _tau; // relaxation time
-	double _dt_over_tau;
+	
 
 	double _weights[N_LATTICE_POSITIONS] = {
 		4.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0,

@@ -3,7 +3,7 @@
 
 #include "lbm_viewer2D.h"
 
-using namespace dpalbm;
+namespace dpa_lbm{
 
 TEST_CASE("test lbm viewer image is sized correctly"){
     // feed the lbm viewer a solver and data
@@ -37,4 +37,5 @@ TEST_CASE("Test lbm viewer sets pixel on advance"){
     // Difusion should have occured
     REQUIRE(viewer.get_pixel(0, 0) != max_color);
 
+}
 }
