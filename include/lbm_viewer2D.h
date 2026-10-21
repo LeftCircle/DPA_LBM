@@ -44,9 +44,11 @@ private:
     void _color_vorticity();
     void _init_viewer();
     void _display();
+    void _color_bounds();
     void _keyboard(unsigned char key, int x, int y);
 
-
+public:
+    BounceBackHalfway* bounds = nullptr;
 
 private:
     Color _max_color = Color(1, 1, 1);

@@ -133,7 +133,7 @@ TEST_CASE("Test configurable solver"){
     // Now let's add the most basic substeps 
     auto lc = std::make_shared<LocalCollision>(lattice, data);
     auto propogation = std::make_shared<PeriodicPropagation>(lattice, data); 
-    auto moment_update = std::make_shared<MomentUpdateD2Q9>(lattice, data);
+    auto moment_update = std::make_shared<MomentUpdatePeriodicD2Q9>(lattice, data);
 
     SolverSystem SolverSystem(lc, propogation, moment_update);
 

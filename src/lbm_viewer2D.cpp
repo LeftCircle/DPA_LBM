@@ -147,21 +147,33 @@ void LBMViewer2D::_color_pixels(){
             break;
         }
     }
+    _color_bounds();
 }
 
 void LBMViewer2D::_color_density(){
     #pragma omp parallel for
     for (int j = 0; j < _data->dimension(1); j++){
         for (int i = 0; i < _data->dimension(0); i++){
-            if (_data->get_bounds().is_blocked(i, j)){
+            auto dens = _data->dens(i, j);
+            dens -= 1.0;
+            auto t = dens / (1.05 - 1);
+            //t = std::clamp(dens, 0.0, 1.0);
+            auto c = _min_color * (1.0 - t) + _max_color * t;
+            _img.set_first_three_channels(i, j, c.r, c.g, c.b);
+        }
+    }
+}
+
+void LBMViewer2D::_color_bounds(){
+    if (bounds == nullptr){
+        std::cout << " no bounds " << std::endl;
+        return;
+    }
+    #pragma omp parallel for
+    for (int j = 0; j < _data->dimension(1); j++){
+        for (int i = 0; i < _data->dimension(0); i++){
+            if (bounds->is_blocked(i, j)){
                 _img.set_first_three_channels(i, j, 1, 0, 0);
-            } else{
-                auto dens = _data->dens(i, j);
-                dens -= 1.0;
-                auto t = dens / (1.05 - 1);
-                //t = std::clamp(dens, 0.0, 1.0);
-                auto c = _min_color * (1.0 - t) + _max_color * t;
-                _img.set_first_three_channels(i, j, c.r, c.g, c.b);
             }
         }
     }
@@ -174,16 +186,12 @@ void LBMViewer2D::_color_vorticity(){
     #pragma omp parallel for
     for (int j = 0; j < _data->dimension(1); j++){
         for (int i = 0; i < _data->dimension(0); i++){
-            if (_data->get_bounds().is_blocked(i, j)){
-                _img.set_first_three_channels(i, j, 1, 0, 0);
-            } else{
-                auto vert = _data->get_vorticity(i, j);
-                vert = std::clamp(vert, -0.02, 0.02);
-                auto other_col = vert < 0 ? min_col : max_col;
-                auto t = std::abs(vert) / 0.02;
-                auto c = mid_col * (1.0 - t) + other_col * t;
-                _img.set_first_three_channels(i, j, c.r, c.g, c.b);
-            }
+            auto vert = _data->get_vorticity(i, j);
+            vert = std::clamp(vert, -0.02, 0.02);
+            auto other_col = vert < 0 ? min_col : max_col;
+            auto t = std::abs(vert) / 0.02;
+            auto c = mid_col * (1.0 - t) + other_col * t;
+            _img.set_first_three_channels(i, j, c.r, c.g, c.b);
         }
     }
 }

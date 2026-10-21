@@ -34,28 +34,13 @@ int main(int argc, char** argv){
 
 
     // // left side forces
-    for (int j = 0; j < data->dimension(1); j++){
-        data->set_acceleration(0, j, pba::vec2d(0.001, 0));
-    }
-    
-    // Block a square in the middle
-    for (int j = (2*h / 5); j < (3 * h / 5); j++){
-        for (int i = (19*w / 40); i < (21 * w / 40); i++){
-            data->get_bounds().block(i, j);
-        }
-    }
-
-
-    // set gravity forces
     // for (int j = 0; j < data->dimension(1); j++){
-    //     for (int i = 0; i < data->dimension(0); i++){
-    //         data->set_force(i, j, pba::vec2d(0, -0.0025));
-    //     }
+    //     data->set_acceleration(0, j, pba::vec2d(0.001, 0));
     // }
-
-    // // small barrier to bounce around with grav
-    // for (int j = (9*h / 40); j < (11 * h / 40); j++){
-    //     for (int i = (15*w / 40); i < (25 * w / 40); i++){
+    
+    // // Block a square in the middle
+    // for (int j = (2*h / 5); j < (3 * h / 5); j++){
+    //     for (int i = (19*w / 40); i < (21 * w / 40); i++){
     //         data->get_bounds().block(i, j);
     //     }
     // }
@@ -65,25 +50,39 @@ int main(int argc, char** argv){
     auto lattice = std::shared_ptr<LBMd2q9>(solver);
     auto local_coll = std::make_shared<LocalCollisionWithForce>(lattice, d);
     auto periodic = std::make_shared<PeriodicPropagation>(lattice, d);
-    auto moment_up = std::make_shared<MomentUpdateD2Q9>(lattice, d);
+    auto bounds = std::make_shared<BounceBackHalfwaySolver>(lattice, d);
+    auto moment_update = std::make_shared<MomentUpdatePeriodicD2Q9>(lattice, d);
 
-    auto sys = std::make_shared<SolverSystem>(local_coll, periodic, moment_up);
 
+    auto sys = std::make_shared<SolverSystem>(local_coll, periodic, bounds, moment_update);
+
+    // set gravity forces
+    for (int j = 0; j < data->dimension(1); j++){
+        for (int i = 0; i < data->dimension(0); i++){
+            data->set_acceleration(i, j, pba::vec2d(0, -0.0025));
+        }
+    }
 
     // Top and bottom walls
-    // for (int i = 0; i < w; i++){
-    //     data->get_bounds().block(i, 0);
-    //     data->get_bounds().block(i, 1);
-    //     data->get_bounds().block(i, h - 1);
-    //     data->get_bounds().block(i, h - 2);
-    // }
+    for (int i = 0; i < w; i++){
+        bounds->get_bounds().block(i, 0);
+        bounds->get_bounds().block(i, 1);
+        bounds->get_bounds().block(i, h - 1);
+        bounds->get_bounds().block(i, h - 2);
+    }
+
+    // small barrier to bounce around with grav
+    for (int j = (9*h / 40); j < (11 * h / 40); j++){
+        for (int i = (15*w / 40); i < (25 * w / 40); i++){
+            bounds->get_bounds().block(i, j);
+        }
+    }
 
     solver->set_to_equilibrium(*data);
 
     
     LBMViewer2D viewer(data, solver, sys);
-    //viewer.set_min_color(Color(0, 0, 1));
-    //viewer.set_max_color(Color(1, 0, 0));
+    viewer.bounds = &bounds->get_bounds();
     viewer.start_viewer();
 
     return 0;

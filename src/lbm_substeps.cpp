@@ -52,7 +52,7 @@ void PeriodicPropagation::solve() {
     _data->for_each(periodic);
 }
 
-void MomentUpdateD2Q9::solve() {
+void MomentUpdatePeriodicD2Q9::solve() {
     auto d2q9_moments = [&](int i, int j){
         auto& f = _data->f;
         const double* q_block = f.data() + f.index(0, i, j);
@@ -84,11 +84,10 @@ void BounceBackHalfwaySolver::solve() {
     _data->for_each(bbhway);
 }
 
-
 void LocalCollisionWithForce::solve(){
     auto cf = [&](int i, int j, int k){
         auto fstar = single_f_equilibrium(*_lattice, _data->get_density(i, j), _data->velocity(i, j), k);
-        auto collision_op = -1.0 / _lattice->tau() * (_data->get_f(i, j, i) - fstar);
+        auto collision_op = -(_lattice->dt() / _lattice->tau()) * (_data->get_f(i, j, k) - fstar);
         auto F = _data->get_acceleration(i, j) * _data->dens(i, j);
         auto source = _compute_force_source_term(F, _data->u(i, j), k);
         _data->set_fstar(i, j, k, _data->get_f(i, j, k) + (collision_op + source) * _lattice->dt());

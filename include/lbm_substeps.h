@@ -63,7 +63,7 @@ public:
     void solve() override;
 };
 
-class MomentUpdateD2Q9 : public LBMPartialSolver{
+class MomentUpdatePeriodicD2Q9 : public LBMPartialSolver{
 public:
     using LBMPartialSolver::LBMPartialSolver;
     void solve() override;
@@ -71,7 +71,8 @@ public:
 
 class BounceBackHalfwaySolver : public LBMPartialSolver{
 public:
-    using LBMPartialSolver::LBMPartialSolver;
+    BounceBackHalfwaySolver(LBMLatticePtr lattice, LBMDataPtr data) : LBMPartialSolver(lattice, data),
+            _bounds(data->dimension(0), data->dimension(1)) {}
     void solve() override;
     
     const BounceBackHalfway& get_bounds() const { return _bounds; }
