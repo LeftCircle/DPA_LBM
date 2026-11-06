@@ -10,9 +10,9 @@ int main(int argc, char** argv){
     int w = 1920 / 8;
     int h = 1080 / 8;
     std::shared_ptr<LBMData> data = std::make_shared<LBMData>(w, h, LBMd2q9::N_LATTICE_POSITIONS);
-    std::shared_ptr<LBMd2q9> solver = std::make_shared<LBMd2q9>(1.0, 1.0);
-    solver->set_speed_of_sound(1.0 / sqrt(3.0));
-    solver->set_tau(0.95);
+    std::shared_ptr<LBMd2q9> d2q9_lattice = std::make_shared<LBMd2q9>(1.0, 1.0);
+    d2q9_lattice->set_speed_of_sound(1.0 / sqrt(3.0));
+    d2q9_lattice->set_tau(0.9);
     
     for (int j = 0; j < h; j++){
         for (int i = 0; i < w; i++){
@@ -22,7 +22,7 @@ int main(int argc, char** argv){
     
     for (int j = (2*h / 5); j < (3 * h / 5); j++){
         for (int i = (2*w / 5); i < (3 * w / 5); i++){
-            data->dens(i, j) = 1.02;
+            data->dens(i, j) = 0.8;
         }
     }
     float large_val = 1.0;
@@ -47,14 +47,17 @@ int main(int argc, char** argv){
 
     // Create the solver system
     auto d = std::shared_ptr<LBMData>(data);
-    auto lattice = std::shared_ptr<LBMd2q9>(solver);
-    auto local_coll = std::make_shared<LocalCollisionWithForce>(lattice, d);
+    auto lattice = std::shared_ptr<LBMd2q9>(d2q9_lattice);
+    auto feq = std::make_shared<LBM_EquilibriumIncompressible>(0.8);
+    //auto feq = std::make_shared<LBM_EquilibriumFunction>();
+    auto local_coll = std::make_shared<LocalCollisionWithForce>(lattice, d, feq);
     auto periodic = std::make_shared<PeriodicPropagation>(lattice, d);
-    auto bounds = std::make_shared<BounceBackHalfwaySolver>(lattice, d);
+    //auto bounds = std::make_shared<BounceBackHalfwaySolver>(lattice, d);
     auto moment_update = std::make_shared<MomentUpdatePeriodicD2Q9>(lattice, d);
 
 
-    auto sys = std::make_shared<SolverSystem>(local_coll, periodic, bounds, moment_update);
+    //auto sys = std::make_shared<SolverSystem>(local_coll, periodic, bounds, moment_update);
+    auto sys = std::make_shared<SolverSystem>(local_coll, periodic, moment_update);
 
     // set gravity forces
     for (int j = 0; j < data->dimension(1); j++){
@@ -78,10 +81,10 @@ int main(int argc, char** argv){
         }
     }
 
-    solver->set_to_equilibrium(*data);
+    d2q9_lattice->set_to_equilibrium(*data);
 
     
-    LBMViewer2D viewer(data, solver, sys);
+    LBMViewer2D viewer(data, d2q9_lattice, sys);
     viewer.bounds = &bounds->get_bounds();
     viewer.start_viewer();
 

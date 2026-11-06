@@ -129,9 +129,9 @@ TEST_CASE("Test configurable solver"){
 
     data->set_all_density(1.0);
     lattice->set_to_equilibrium(*data);
-
+    auto feq = std::make_shared<LBM_EquilibriumFunction>();
     // Now let's add the most basic substeps 
-    auto lc = std::make_shared<LocalCollision>(lattice, data);
+    auto lc = std::make_shared<LocalCollision>(lattice, data, feq);
     auto propogation = std::make_shared<PeriodicPropagation>(lattice, data); 
     auto moment_update = std::make_shared<MomentUpdatePeriodicD2Q9>(lattice, data);
 

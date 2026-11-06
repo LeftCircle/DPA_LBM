@@ -21,7 +21,6 @@ public:
 	void set_all_velocity(double x_vel, double y_vel) { set_all_velocity(pba::Vector2(x_vel, y_vel)); }
 	void set_all_f(double val);
 
-
 	int dimension(int d) const;
 	int n_qs() const {return f.get_dim(0); }
 	void resize_f_dimension(int d, int to_size) {f.resize_dimension(d, to_size); fstar.resize_dimension(d, to_size); };
@@ -44,9 +43,6 @@ public:
 
 	double get_total_density() const;
 	const pba::Vector2<double>& get_max_u() const;
-
-	const BounceBackHalfway& get_bounds() const { return _bounds; }
-	BounceBackHalfway& get_bounds() { return _bounds; }
 
 	double get_vorticity(int x, int y) const;
 	
@@ -92,7 +88,6 @@ public:
 	Array3D<double> fstar; // intermediate distro function for ease of implementation
 
 private:
-	BounceBackHalfway _bounds;
 	Array2D<pba::vec2d> _acceleration;
 
 };

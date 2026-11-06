@@ -6,8 +6,8 @@
 #include "tessendorf_vecendorf.h"
 #include "nd_vector.h"
 #include "lbm_data.h"
-#include "algorithm"
-#include "numeric"
+//#include "algorithm"
+//#include "numeric"
 
 namespace dpa_lbm{
 
@@ -24,13 +24,13 @@ public:
 	double tau() const noexcept { return _tau; }
 	double c_s() const noexcept { return _c_s; }
 	int n_lattice_positions() const noexcept { return _n_lattice_positions; }
-
+	
 	// TODO -> these could be base with each child class
 	// instantializing std::vectors
 	virtual pba::vec2d get_velocity(int i) const = 0;
 	virtual double get_weight(int i) const = 0;
 
-	virtual int get_fi_minus(int q) const = 0; 
+	virtual int get_fi_minus(int q) const = 0;
 
 
 	void set_dt(double dt);

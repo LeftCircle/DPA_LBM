@@ -168,7 +168,7 @@ class Vector2
 {
   public:
 
-   Vector2(){ xy[0] = xy[1] = xy[2] = 0; }
+   Vector2(){ xy[0] = xy[1] = 0; }
 
    Vector2(const Vector2& v)
    { 

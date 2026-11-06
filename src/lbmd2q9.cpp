@@ -84,7 +84,7 @@ void LBMd2q9::compute_moments(LBMData& data) const {
                 // data.u(i, j).set(x, y);
 
                 // TODO -> the correct term should have a Force / dens term,  but that seems to crash things
-                data.set_velocity(i, j, pba::vec2d(x, y) + data.get_acceleration(x, y) * _dt * 0.5);
+                data.set_velocity(i, j, pba::vec2d(x, y) + data.get_acceleration(i, j) * _dt * 0.5);
                 // double x = (f(1, i, j) + f(5, i, j) + f(8, i, j) - (f(3,i,j) + f(6,i,j) + f(7,i,j))); 
                 // double y = (f(2, i, j) + f(5, i, j) + f(6, i, j) - (f(4,i,j) + f(7,i,j) + f(8,i,j)));
                 // data.u(i, j) = (pba::vec2d(x, y) + data.get_force(x, y) * _dt * 0.5) / data.dens(i, j);
@@ -199,25 +199,25 @@ void LBMd2q9::zou_he_velocity_inlet(LBMData& data) const{
 }
 
 void LBMd2q9::propogate_all_points(LBMData& data) const {
-    const int _y = data.dimension(1);
-    const int _x = data.dimension(0);
-    const auto& bounds = data.get_bounds();
-    #pragma omp parallel for
-    for (int j = 0; j < _y; j++){
-        for (int i = 0; i < _x; i++){
-            for (int q = 0; q < N_LATTICE_POSITIONS; q++){
-                if (bounds.is_blocked(i, j, q)) continue;
+    // const int _y = data.dimension(1);
+    // const int _x = data.dimension(0);
+    // const auto& bounds = data.get_bounds();
+    // #pragma omp parallel for
+    // for (int j = 0; j < _y; j++){
+    //     for (int i = 0; i < _x; i++){
+    //         for (int q = 0; q < N_LATTICE_POSITIONS; q++){
+    //             if (bounds.is_blocked(i, j, q)) continue;
 
-                int ni = (i + static_cast<int>(_ci[q].X()) + data.dimension(0)) % data.dimension(0);
-                int nj = (j + static_cast<int>(_ci[q].Y()) + data.dimension(1)) % data.dimension(1);
-                if (bounds.is_blocked(ni, nj, q)){
-                    data.set_f(i, j, get_fi_minus(q), data.get_fstar(i, j, q));
-                } else {
-                    data.f(q, ni, nj) = data.fstar(q, i, j);
-                }
-            }
-        }
-    }
+    //             int ni = (i + static_cast<int>(_ci[q].X()) + data.dimension(0)) % data.dimension(0);
+    //             int nj = (j + static_cast<int>(_ci[q].Y()) + data.dimension(1)) % data.dimension(1);
+    //             if (bounds.is_blocked(ni, nj, q)){
+    //                 data.set_f(i, j, get_fi_minus(q), data.get_fstar(i, j, q));
+    //             } else {
+    //                 data.f(q, ni, nj) = data.fstar(q, i, j);
+    //             }
+    //         }
+    //     }
+    // }
 }
 
 void LBMd2q9::set_to_equilibrium(LBMData& data) const {

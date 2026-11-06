@@ -11,20 +11,6 @@ void SolverSystem::solve(){
     }
 }
 
-double single_f_equilibrium(
-    const LBMLattice& lattice,
-    const double dens,
-    const pba::Vector2<double>& u,
-    const int lattice_point
-){
-    double cu = lattice.get_velocity(lattice_point) * u;
-    double uu = u * u;
-    return lattice.get_weight(lattice_point) * dens * (1.0 + cu * lattice.one_over_cs_squared() +
-        cu * cu * 0.5 * lattice.one_over_cs_fourth() - 
-        uu * 0.5 * lattice.one_over_cs_squared()
-    );
-}
-
 void LocalCollision::solve() {
     _data->for_each(
         [this](int i, int j, int k){
@@ -38,7 +24,7 @@ void LocalCollision::_local_collision(int i, int j, int q){
     auto dens = _data->get_density(i, j);
     auto u = _data->velocity(i, j);
     _data->fstar(q, i, j) = _data->get_f(i, j, q) - _lattice->dt_over_tau() * 
-                           (_data->get_f(i, j, q) - single_f_equilibrium(*_lattice, dens, u, q));
+                           (_data->get_f(i, j, q) - _feq_func->solve(*_lattice, dens, u, q));
 }
 
 void PeriodicPropagation::solve() {
@@ -62,7 +48,7 @@ void MomentUpdatePeriodicD2Q9::solve() {
         } else {
             double x = (f(1, i, j) + f(5, i, j) + f(8, i, j) - (f(3,i,j) + f(6,i,j) + f(7,i,j))) / _data->dens(i,j); 
             double y = (f(2, i, j) + f(5, i, j) + f(6, i, j) - (f(4,i,j) + f(7,i,j) + f(8,i,j))) / _data->dens(i,j);
-            _data->set_velocity(i, j, pba::vec2d(x, y) + _data->get_acceleration(x, y) * _lattice->dt() * 0.5);
+            _data->set_velocity(i, j, pba::vec2d(x, y) + _data->get_acceleration(i, j) * _lattice->dt() * 0.5);
         }
     };
     _data->for_each_node(d2q9_moments);
@@ -86,8 +72,8 @@ void BounceBackHalfwaySolver::solve() {
 
 void LocalCollisionWithForce::solve(){
     auto cf = [&](int i, int j, int k){
-        auto fstar = single_f_equilibrium(*_lattice, _data->get_density(i, j), _data->velocity(i, j), k);
-        auto collision_op = -(_lattice->dt() / _lattice->tau()) * (_data->get_f(i, j, k) - fstar);
+        auto fstar = _feq_func->solve(*_lattice, _data->get_density(i, j), _data->velocity(i, j), k);
+        auto collision_op = -((_data->get_f(i, j, k) - fstar) / _lattice->tau());
         auto F = _data->get_acceleration(i, j) * _data->dens(i, j);
         auto source = _compute_force_source_term(F, _data->u(i, j), k);
         _data->set_fstar(i, j, k, _data->get_f(i, j, k) + (collision_op + source) * _lattice->dt());
