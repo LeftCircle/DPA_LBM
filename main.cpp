@@ -48,16 +48,16 @@ int main(int argc, char** argv){
     // Create the solver system
     auto d = std::shared_ptr<LBMData>(data);
     auto lattice = std::shared_ptr<LBMd2q9>(d2q9_lattice);
-    auto feq = std::make_shared<LBM_EquilibriumIncompressible>(0.8);
-    //auto feq = std::make_shared<LBM_EquilibriumFunction>();
+    //auto feq = std::make_shared<LBM_EquilibriumIncompressible>(0.8);
+    auto feq = std::make_shared<LBM_EquilibriumFunction>();
     auto local_coll = std::make_shared<LocalCollisionWithForce>(lattice, d, feq);
     auto periodic = std::make_shared<PeriodicPropagation>(lattice, d);
     auto bounds = std::make_shared<BounceBackHalfwaySolver>(lattice, d);
     auto moment_update = std::make_shared<MomentUpdatePeriodicD2Q9>(lattice, d);
 
 
-    //auto sys = std::make_shared<SolverSystem>(local_coll, periodic, bounds, moment_update);
-    auto sys = std::make_shared<SolverSystem>(local_coll, periodic, moment_update);
+    auto sys = std::make_shared<SolverSystem>(local_coll, periodic, bounds, moment_update);
+    //auto sys = std::make_shared<SolverSystem>(local_coll, periodic, moment_update);
 
     // set gravity forces
     for (int j = 0; j < data->dimension(1); j++){

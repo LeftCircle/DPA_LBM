@@ -94,7 +94,7 @@ double LocalCollisionWithForce::_compute_force_source_term(
             auto t3 = _lattice->get_velocity(i)[alpha] * _lattice->get_velocity(i)[beta];
             t3 = alpha == beta ? t3 - _lattice->c_s() * _lattice->c_s() : t3;
             t3 *= u[beta] * _lattice->one_over_cs_fourth();
-            s += t1 * _lattice->get_weight(i) * (t2 - t3) * F[alpha];
+            s += t1 * _lattice->get_weight(i) * ((t2 + t3) * F[alpha]);
         }
     }
     return s;
