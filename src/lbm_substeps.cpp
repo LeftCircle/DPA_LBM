@@ -87,15 +87,17 @@ double LocalCollisionWithForce::_compute_force_source_term(
     int i
 ) const {
     double s = 0;
+    auto t1 = (1.0 - _lattice->dt_over_tau() * 0.5);
     for (int alpha = 0; alpha < 2; alpha++){
+        auto t2 = _lattice->get_velocity(i)[alpha] * _lattice->one_over_cs_squared();
+        double t3 = 0;
         for (int beta = 0; beta < 2; beta++){
-            auto t1 = (1.0 - _lattice->dt_over_tau() * 0.5);
-            auto t2 = _lattice->get_velocity(i)[alpha] * _lattice->one_over_cs_squared();
-            auto t3 = _lattice->get_velocity(i)[alpha] * _lattice->get_velocity(i)[beta];
+            t3 += _lattice->get_velocity(i)[alpha] * _lattice->get_velocity(i)[beta];
             t3 = alpha == beta ? t3 - _lattice->c_s() * _lattice->c_s() : t3;
-            t3 *= u[beta] * _lattice->one_over_cs_fourth();
-            s += t1 * _lattice->get_weight(i) * ((t2 + t3) * F[alpha]);
+            t3 *= u[beta];
         }
+        t3 *= _lattice->one_over_cs_fourth();
+        s += t1 * _lattice->get_weight(i) * ((t2 + t3) * F[alpha]);
     }
     return s;
 }
