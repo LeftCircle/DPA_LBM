@@ -52,7 +52,7 @@ int main(int argc, char** argv){
     //auto feq = std::make_shared<LBM_EquilibriumFunction>();
     auto local_coll = std::make_shared<LocalCollisionWithForce>(lattice, d, feq);
     auto periodic = std::make_shared<PeriodicPropagation>(lattice, d);
-    //auto bounds = std::make_shared<BounceBackHalfwaySolver>(lattice, d);
+    auto bounds = std::make_shared<BounceBackHalfwaySolver>(lattice, d);
     auto moment_update = std::make_shared<MomentUpdatePeriodicD2Q9>(lattice, d);
 
 
