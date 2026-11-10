@@ -7,30 +7,31 @@ using namespace dpa_lbm;
 
 int main(int argc, char** argv){
     
-    int w = 1920 / 8;
-    int h = 1080 / 8;
+    int w = 1920 / 4;
+    int h = 1080 / 4;
     std::shared_ptr<LBMData> data = std::make_shared<LBMData>(w, h, LBMd2q9::N_LATTICE_POSITIONS);
     std::shared_ptr<LBMd2q9> d2q9_lattice = std::make_shared<LBMd2q9>(1.0, 1.0);
     d2q9_lattice->set_speed_of_sound(1.0 / sqrt(3.0));
     d2q9_lattice->set_tau(0.9);
-    
+    double constant_inlet_vel = 0.1;
     for (int j = 0; j < h; j++){
         for (int i = 0; i < w; i++){
             data->dens(i, j) = 1;
+            data->set_velocity(i, j, {constant_inlet_vel, 0});
         }
     }
     
-    for (int j = (2*h / 5); j < (3 * h / 5); j++){
-        for (int i = (2*w / 5); i < (3 * w / 5); i++){
-            data->dens(i, j) = 0.8;
-        }
-    }
-    float large_val = 1.0;
-    data->dens(w / 2, h / 2) = large_val;
-    data->dens(w / 4, h / 4) = large_val;
-    data->dens(w / 4, 3 * h / 4) = large_val;
-    data->dens(3 * w / 4, h / 4) = large_val;
-    data->dens(3 * w / 4, 3 * h / 4) = large_val;
+    // for (int j = (2*h / 5); j < (3 * h / 5); j++){
+    //     for (int i = (2*w / 5); i < (3 * w / 5); i++){
+    //         data->dens(i, j) = 1.01;
+    //     }
+    // }
+    // float large_val = 1.0;
+    // data->dens(w / 2, h / 2) = large_val;
+    // data->dens(w / 4, h / 4) = large_val;
+    // data->dens(w / 4, 3 * h / 4) = large_val;
+    // data->dens(3 * w / 4, h / 4) = large_val;
+    // data->dens(3 * w / 4, 3 * h / 4) = large_val;
 
 
     // // left side forces
@@ -46,25 +47,28 @@ int main(int argc, char** argv){
     // }
 
     // Create the solver system
+    
     auto d = std::shared_ptr<LBMData>(data);
     auto lattice = std::shared_ptr<LBMd2q9>(d2q9_lattice);
     //auto feq = std::make_shared<LBM_EquilibriumIncompressible>(0.8);
     auto feq = std::make_shared<LBM_EquilibriumFunction>();
-    auto local_coll = std::make_shared<LocalCollisionWithForce>(lattice, d, feq);
+    //auto local_coll = std::make_shared<LocalCollisionWithForce>(lattice, d, feq);
+    auto local_coll = std::make_shared<LocalCollision>(lattice, d, feq);
     auto periodic = std::make_shared<PeriodicPropagation>(lattice, d);
+    auto boundary_cond = std::make_shared<BoundaryZouHeInlet>(lattice, d, constant_inlet_vel);
     auto bounds = std::make_shared<BounceBackHalfwaySolver>(lattice, d);
     auto moment_update = std::make_shared<MomentUpdatePeriodicD2Q9>(lattice, d);
 
 
-    auto sys = std::make_shared<SolverSystem>(local_coll, periodic, bounds, moment_update);
+    auto sys = std::make_shared<SolverSystem>(local_coll, periodic, boundary_cond, bounds, moment_update);
     //auto sys = std::make_shared<SolverSystem>(local_coll, periodic, moment_update);
 
     // set gravity forces
-    for (int j = 0; j < data->dimension(1); j++){
-        for (int i = 0; i < data->dimension(0); i++){
-            data->set_acceleration(i, j, pba::vec2d(0, -0.0025));
-        }
-    }
+    // for (int j = 0; j < data->dimension(1); j++){
+    //     for (int i = 0; i < data->dimension(0); i++){
+    //         data->set_acceleration(i, j, pba::vec2d(0, -0.0025));
+    //     }
+    // }
 
     // Top and bottom walls
     for (int i = 0; i < w; i++){

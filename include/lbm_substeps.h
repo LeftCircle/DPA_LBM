@@ -82,6 +82,15 @@ private:
     BounceBackHalfway _bounds;
 };
 
+class BoundaryZouHeInlet : public LBMPartialSolver{
+public:
+    BoundaryZouHeInlet(LBMLatticePtr lattice, LBMDataPtr data, double inlet_vel) : 
+        LBMPartialSolver(lattice, data), _inlet_velocity(inlet_vel) {}
+    void solve() override;
+private:
+    double _inlet_velocity = 0;
+};
+
 class SolverSystem{
 public:
     template <typename... SolverType>

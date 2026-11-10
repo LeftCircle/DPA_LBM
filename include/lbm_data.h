@@ -35,7 +35,7 @@ public:
 	void set_fstar(int x, int y, int q, double val) { fstar(q, x, y) = val; }
 	const double get_fstar(int x, int y, int q) const { return fstar(q, x, y); }
 
-	const auto get_acceleration(int x, int y) const { return _acceleration(x, y); }
+	const auto& get_acceleration(int x, int y) const { return _acceleration(x, y); }
 	void set_acceleration(int x, int y, pba::vec2d f) { _acceleration(x, y) = f; }
 
 	const auto get_density(int x, int y) const { return dens(x, y); }

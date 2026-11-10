@@ -27,6 +27,7 @@ void LocalCollision::_local_collision(int i, int j, int q){
                            (_data->get_f(i, j, q) - _feq_func->solve(*_lattice, dens, u, q));
 }
 
+// Streaming
 void PeriodicPropagation::solve() {
     auto periodic = [&](int i, int j, int k){
         const auto nx = _data->dimension(0);
@@ -44,7 +45,7 @@ void MomentUpdatePeriodicD2Q9::solve() {
         const double* q_block = f.data() + f.index(0, i, j);
         _data->dens(i, j) = std::accumulate(q_block, q_block + _lattice->n_lattice_positions(), 0.0);
         if (_data->dens(i, j) == 0){
-            _data->u(i, j).set(0, 0);
+            _data->set_velocity(i, j, {});
         } else {
             double x = (f(1, i, j) + f(5, i, j) + f(8, i, j) - (f(3,i,j) + f(6,i,j) + f(7,i,j))) / _data->dens(i,j); 
             double y = (f(2, i, j) + f(5, i, j) + f(6, i, j) - (f(4,i,j) + f(7,i,j) + f(8,i,j))) / _data->dens(i,j);
@@ -101,6 +102,32 @@ double LocalCollisionWithForce::_compute_force_source_term(
         s += ((t2 + t3) * F[alpha]);
     }
     return t1 * _lattice->get_weight(i) * s;
+}
+
+void BoundaryZouHeInlet::solve(){
+    for (int y = 0; y < _data->dimension(1); y++) {
+
+        double ux_in = _inlet_velocity;
+        double uy_in = 0.0;
+
+        double rho_in = (1.0 / (1.0 - ux_in)) * (_data->get_fstar(0,y,0) + _data->get_fstar(0,y,2) + _data->get_fstar(0,y,4) +
+        2.0 * (_data->get_fstar(0,y,3) + _data->get_fstar(0,y,6) + _data->get_fstar(0,y,7)));
+
+        _data->set_f(0,y,1, _data->get_fstar(0,y,3) + (2.0 / 3.0) * rho_in * ux_in);
+
+        _data->set_f(0,y,5, _data->get_fstar(0,y,7) - 0.5 * (_data->get_fstar(0,y,2) - _data->get_fstar(0,y,4)) +
+        (1.0 / 6.0) * rho_in * ux_in + 0.5 * rho_in * uy_in);
+
+        _data->set_f(0,y,8, _data->get_fstar(0,y,6) + 0.5 * (_data->get_fstar(0,y,2) - _data->get_fstar(0,y,4)) +
+        (1.0 / 6.0) * rho_in * ux_in - 0.5 * rho_in * uy_in);
+    }
+
+    auto Nx = _data->dimension(0);
+    for (int y = 0; y < _data->dimension(1); y++) {
+        for (int i = 0; i < 9; i++) {
+            _data->set_f(Nx - 1, y, i, _data->get_fstar(Nx - 2, y, i));
+        }
+    }
 }
 
 
