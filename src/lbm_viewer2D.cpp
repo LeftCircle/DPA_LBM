@@ -1,5 +1,8 @@
 #include "lbm_viewer2D.h"
 #include "numeric"
+#include <iomanip>
+#include <iostream>
+#include <sstream>
 
 
 
@@ -51,6 +54,37 @@ void LBMViewer2D::tick(){
     //_t = _solver->advance(*_data, _t);
     _solver_system->solve();
     _color_pixels();
+    if (_save_interval != 0 && ++_sequence_frame % _save_interval == 0) {
+        std::ostringstream filename;
+        filename << "frame_" << std::setfill('0') << std::setw(8)
+                 << _sequence_frame << ".png";
+        // OpenGL draws row 0 at the bottom, whereas image files put it at the top.
+        ImageData output(_img);
+        output.flip();
+        output.oiio_write_to((_sequence_directory / filename.str()).string());
+    }
+}
+
+void LBMViewer2D::configure_image_sequence(
+    std::size_t interval, const std::filesystem::path& output_directory
+) {
+    _save_interval = 0;
+    _sequence_frame = 0;
+    if (interval == 0) return;
+
+    std::filesystem::create_directories(output_directory);
+    for (std::size_t run = 1; ; ++run) {
+        std::ostringstream name;
+        name << "run_" << std::setfill('0') << std::setw(4) << run;
+        const auto candidate = output_directory / name.str();
+        if (std::filesystem::create_directory(candidate)) {
+            _sequence_directory = candidate;
+            break;
+        }
+    }
+    _save_interval = interval;
+    std::cout << "Saving every " << interval << " simulation steps to "
+              << _sequence_directory << std::endl;
 }
 
 void LBMViewer2D::_display(void){

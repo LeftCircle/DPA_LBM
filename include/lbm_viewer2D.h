@@ -1,6 +1,8 @@
 #pragma once
 
 #include <GL/glut.h>
+#include <cstddef>
+#include <filesystem>
 
 #include "image_data.h"
 #include "lbmd2q9.h"
@@ -25,6 +27,11 @@ public:
     void start_viewer();
     // Uses the solver to advance lbm data based on solver properties.
     void tick();
+
+    // Save the displayed view every interval simulation steps. Zero disables saving.
+    // Each enabled sequence is written to a new run directory under output_directory.
+    void configure_image_sequence(std::size_t interval,
+                                  const std::filesystem::path& output_directory = "frames");
 
     int img_width() const;
     int img_height() const;
@@ -58,6 +65,9 @@ private:
     std::shared_ptr<LBMd2q9> _solver;
     std::shared_ptr<SolverSystem> _solver_system;
     ImageData _img;
+    std::size_t _save_interval = 0;
+    std::size_t _sequence_frame = 0;
+    std::filesystem::path _sequence_directory;
     float _total_density;
     float _estimated_max_speed;
     float _t = 0;
@@ -75,6 +85,7 @@ private:
 
 
 } // end namespace dpa_lbm
+
 
 
 

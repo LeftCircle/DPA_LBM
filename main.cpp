@@ -1,11 +1,40 @@
 
 #include <iostream>
+#include <charconv>
+#include <string_view>
 #include "lbm_viewer2D.h"
 #include "lbm_substeps.h"
 
 using namespace dpa_lbm;
 
 int main(int argc, char** argv){
+    std::size_t save_interval = 0;
+    std::filesystem::path output_directory = "frames";
+    for (int i = 1; i < argc; ++i) {
+        const std::string_view arg(argv[i]);
+        if (arg == "--help") {
+            std::cout << "Usage: " << argv[0]
+                      << " [--save-every N] [--output-dir DIR]\n";
+            return 0;
+        }
+        if (arg == "--save-every" && i + 1 < argc) {
+            const std::string_view value(argv[++i]);
+            const auto result = std::from_chars(value.data(), value.data() + value.size(), save_interval);
+            if (result.ec != std::errc{} || result.ptr != value.data() + value.size() || save_interval == 0) {
+                std::cerr << "--save-every requires a positive integer\n";
+                return 1;
+            }
+        } else if (arg == "--output-dir" && i + 1 < argc) {
+            output_directory = argv[++i];
+            if (output_directory.empty()) {
+                std::cerr << "--output-dir requires a nonempty directory\n";
+                return 1;
+            }
+        } else {
+            std::cerr << "Unknown or incomplete option: " << arg << '\n';
+            return 1;
+        }
+    }
     
     int w = 1920 / 4;
     int h = 1080 / 4;
@@ -104,8 +133,15 @@ int main(int argc, char** argv){
     
     LBMViewer2D viewer(data, d2q9_lattice, sys);
     viewer.bounds = &bounds->get_bounds();
+    try {
+        viewer.configure_image_sequence(save_interval, output_directory);
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "Could not create image sequence directory: " << e.what() << '\n';
+        return 1;
+    }
     viewer.start_viewer();
 
     return 0;
 }
+
 

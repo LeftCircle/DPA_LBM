@@ -2,8 +2,54 @@
 
 
 #include "lbm_viewer2D.h"
+#include <chrono>
+#include <filesystem>
 
 namespace dpa_lbm{
+
+TEST_CASE("viewer saves a numbered image sequence at the requested interval") {
+    namespace fs = std::filesystem;
+    const auto stamp = std::chrono::steady_clock::now().time_since_epoch().count();
+    const auto root = fs::temp_directory_path() / ("dpa_lbm_sequence_" + std::to_string(stamp));
+    struct Cleanup {
+        fs::path path;
+        ~Cleanup() { std::error_code ec; fs::remove_all(path, ec); }
+    } cleanup{root};
+
+    auto data = std::make_shared<LBMData>(3, 3, 9);
+    data->set_all_density(1.0);
+    auto lattice = std::make_shared<LBMd2q9>(1.0, 1.0);
+    auto sys = std::make_shared<SolverSystem>();
+    LBMViewer2D viewer(data, lattice, sys);
+    BounceBackHalfway bounds(3, 3);
+    bounds.block(0, 0);
+    viewer.bounds = &bounds;
+
+    viewer.configure_image_sequence(2, root);
+    viewer.tick();
+    REQUIRE_FALSE(fs::exists(root / "run_0001/frame_00000001.png"));
+    viewer.tick();
+    const auto first = root / "run_0001/frame_00000002.png";
+    REQUIRE(fs::exists(first));
+
+    ImageData image(first.string().c_str());
+    REQUIRE(image.get_width() == 3);
+    REQUIRE(image.get_height() == 3);
+    // The bottom-left blocked cell appears at the bottom of the image file.
+    REQUIRE(image.get_pixel_value(0, 2, 0) > 0.9f);
+    REQUIRE(image.get_pixel_value(0, 2, 1) < 0.1f);
+    REQUIRE(image.get_pixel_value(0, 0, 0) < 0.1f);
+
+    viewer.configure_image_sequence(2, root);
+    viewer.tick();
+    viewer.tick();
+    REQUIRE(fs::exists(first));
+    REQUIRE(fs::exists(root / "run_0002/frame_00000002.png"));
+    viewer.configure_image_sequence(0, root);
+    viewer.tick();
+    viewer.tick();
+    REQUIRE_FALSE(fs::exists(root / "run_0002/frame_00000004.png"));
+}
 
 TEST_CASE("test lbm viewer image is sized correctly"){
     // // feed the lbm viewer a solver and data
