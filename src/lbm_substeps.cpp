@@ -110,22 +110,22 @@ void BoundaryZouHeInlet::solve(){
         double ux_in = _inlet_velocity;
         double uy_in = 0.0;
 
-        double rho_in = (1.0 / (1.0 - ux_in)) * (_data->get_fstar(0,y,0) + _data->get_fstar(0,y,2) + _data->get_fstar(0,y,4) +
-        2.0 * (_data->get_fstar(0,y,3) + _data->get_fstar(0,y,6) + _data->get_fstar(0,y,7)));
+        double rho_in = (1.0 / (1.0 - ux_in)) * (_data->get_f(0,y,0) + _data->get_f(0,y,2) + _data->get_f(0,y,4) +
+        2.0 * (_data->get_f(0,y,3) + _data->get_f(0,y,6) + _data->get_f(0,y,7)));
 
-        _data->set_f(0,y,1, _data->get_fstar(0,y,3) + (2.0 / 3.0) * rho_in * ux_in);
+        _data->set_f(0,y,1, _data->get_f(0,y,3) + (2.0 / 3.0) * rho_in * ux_in);
 
-        _data->set_f(0,y,5, _data->get_fstar(0,y,7) - 0.5 * (_data->get_fstar(0,y,2) - _data->get_fstar(0,y,4)) +
+        _data->set_f(0,y,5, _data->get_f(0,y,7) - 0.5 * (_data->get_f(0,y,2) - _data->get_f(0,y,4)) +
         (1.0 / 6.0) * rho_in * ux_in + 0.5 * rho_in * uy_in);
 
-        _data->set_f(0,y,8, _data->get_fstar(0,y,6) + 0.5 * (_data->get_fstar(0,y,2) - _data->get_fstar(0,y,4)) +
+        _data->set_f(0,y,8, _data->get_f(0,y,6) + 0.5 * (_data->get_f(0,y,2) - _data->get_f(0,y,4)) +
         (1.0 / 6.0) * rho_in * ux_in - 0.5 * rho_in * uy_in);
     }
 
     auto Nx = _data->dimension(0);
     for (int y = 0; y < _data->dimension(1); y++) {
         for (int i = 0; i < 9; i++) {
-            _data->set_f(Nx - 1, y, i, _data->get_fstar(Nx - 2, y, i));
+            _data->set_f(Nx - 1, y, i, _data->get_f(Nx - 2, y, i));
         }
     }
 }
