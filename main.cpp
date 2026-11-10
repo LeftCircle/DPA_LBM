@@ -12,7 +12,7 @@ int main(int argc, char** argv){
     std::shared_ptr<LBMData> data = std::make_shared<LBMData>(w, h, LBMd2q9::N_LATTICE_POSITIONS);
     std::shared_ptr<LBMd2q9> d2q9_lattice = std::make_shared<LBMd2q9>(1.0, 1.0);
     d2q9_lattice->set_speed_of_sound(1.0 / sqrt(3.0));
-    d2q9_lattice->set_tau(0.9);
+    d2q9_lattice->set_tau(0.6);
     double constant_inlet_vel = 0.1;
     for (int j = 0; j < h; j++){
         for (int i = 0; i < w; i++){
@@ -20,12 +20,16 @@ int main(int argc, char** argv){
             data->set_velocity(i, j, {constant_inlet_vel, 0});
         }
     }
+    int r = h / 10;
     
     // for (int j = (2*h / 5); j < (3 * h / 5); j++){
     //     for (int i = (2*w / 5); i < (3 * w / 5); i++){
     //         data->dens(i, j) = 1.01;
     //     }
     // }
+
+    
+
     // float large_val = 1.0;
     // data->dens(w / 2, h / 2) = large_val;
     // data->dens(w / 4, h / 4) = large_val;
@@ -52,8 +56,8 @@ int main(int argc, char** argv){
     auto lattice = std::shared_ptr<LBMd2q9>(d2q9_lattice);
     //auto feq = std::make_shared<LBM_EquilibriumIncompressible>(0.8);
     auto feq = std::make_shared<LBM_EquilibriumFunction>();
-    auto local_coll = std::make_shared<LocalCollisionWithForce>(lattice, d, feq);
-    //auto local_coll = std::make_shared<LocalCollision>(lattice, d, feq);
+    //auto local_coll = std::make_shared<LocalCollisionWithForce>(lattice, d, feq);
+    auto local_coll = std::make_shared<LocalCollision>(lattice, d, feq);
     auto periodic = std::make_shared<PeriodicPropagation>(lattice, d);
     auto boundary_cond = std::make_shared<BoundaryZouHeInlet>(lattice, d, constant_inlet_vel);
     auto bounds = std::make_shared<BounceBackHalfwaySolver>(lattice, d);
@@ -79,10 +83,20 @@ int main(int argc, char** argv){
     }
 
     // small barrier to bounce around with grav
-    for (int j = (9*h / 40); j < (11 * h / 40); j++){
-        for (int i = (15*w / 40); i < (25 * w / 40); i++){
-            bounds->get_bounds().block(i, j);
-        }
+    // for (int j = (9*h / 40); j < (11 * h / 40); j++){
+    //     for (int i = (15*w / 40); i < (25 * w / 40); i++){
+    //         bounds->get_bounds().block(i, j);
+    //     }
+    // }
+    // sphere in middle
+    for (int y = 0; y < h; y++){
+        for (int x = 0 ; x < w; x++){
+            auto dx = x - w / 4;
+            auto dy = y - h / 2;
+            if (dx * dx + dy * dy < r * r){
+                bounds->get_bounds().block(x, y);
+            }
+        } 
     }
 
     d2q9_lattice->set_to_equilibrium(*data);
