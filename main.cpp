@@ -12,7 +12,7 @@ int main(int argc, char** argv){
     std::shared_ptr<LBMData> data = std::make_shared<LBMData>(w, h, LBMd2q9::N_LATTICE_POSITIONS);
     std::shared_ptr<LBMd2q9> d2q9_lattice = std::make_shared<LBMd2q9>(1.0, 1.0);
     d2q9_lattice->set_speed_of_sound(1.0 / sqrt(3.0));
-    d2q9_lattice->set_tau(0.6);
+    d2q9_lattice->set_tau(0.55);
     double constant_inlet_vel = 0.1;
     for (int j = 0; j < h; j++){
         for (int i = 0; i < w; i++){
@@ -54,7 +54,7 @@ int main(int argc, char** argv){
     
     auto d = std::shared_ptr<LBMData>(data);
     auto lattice = std::shared_ptr<LBMd2q9>(d2q9_lattice);
-    //auto feq = std::make_shared<LBM_EquilibriumIncompressible>(0.8);
+    //auto feq = std::make_shared<LBM_EquilibriumIncompressible>(0.95);
     auto feq = std::make_shared<LBM_EquilibriumFunction>();
     //auto local_coll = std::make_shared<LocalCollisionWithForce>(lattice, d, feq);
     auto local_coll = std::make_shared<LocalCollision>(lattice, d, feq);
@@ -68,11 +68,11 @@ int main(int argc, char** argv){
     //auto sys = std::make_shared<SolverSystem>(local_coll, periodic, moment_update);
 
     //set gravity forces
-    for (int j = 0; j < data->dimension(1); j++){
-        for (int i = 0; i < data->dimension(0); i++){
-            data->set_acceleration(i, j, pba::vec2d(0.001, 0));
-        }
-    }
+    // for (int j = 0; j < data->dimension(1); j++){
+    //     for (int i = 0; i < data->dimension(0); i++){
+    //         data->set_acceleration(i, j, pba::vec2d(0.001, 0));
+    //     }
+    // }
 
     // Top and bottom walls
     for (int i = 0; i < w; i++){
