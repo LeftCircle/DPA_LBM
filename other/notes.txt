@@ -17,3 +17,24 @@ ctest --test-dir build --output-on-failure
 
 run the gui
 ./build/build/dpa_lbm_fluids
+
+//-------------------------------------------------------------------------------
+// HDK Development notes
+//-------------------------------------------------------------------------------
+
+
+# Setting up development for houdini hdk
+- initialize houdini environemnt in shell
+cd /opt/hfsX.Y.ZZZ   # Replace with your installed version
+source houdini_setup
+
+echo "$HFS"
+g++ --version
+
+# hdk headers and examples are under
+$HFS/toolkit/include
+$HFS/toolkit/samples
+
+
+
+
