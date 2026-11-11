@@ -5,7 +5,7 @@ project(DPA_LBMFluids
     LANGUAGES CXX
 )
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -13,15 +13,6 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
     "${CMAKE_BINARY_DIR}/bin"
 )
-
-# ------------------------------------------------------------
-# QT stuff!
-# ------------------------------------------------------------
-
-# Qt's CMake integration handles moc/uic/rcc for Qt classes and forms.
-# set(CMAKE_AUTOMOC ON)
-# set(CMAKE_AUTOUIC ON)
-# set(CMAKE_AUTORCC ON)
 
 find_package(OpenMP REQUIRED)
 # find_package(Qt6 REQUIRED COMPONENTS Widgets Charts)
@@ -75,42 +66,6 @@ add_subdirectory(
 
 
 # ------------------------------------------------------------
-# LBM Things
-# ------------------------------------------------------------
-
-# file(GLOB_RECURSE GUI_SOURCES CONFIGURE_DEPENDS
-#     "${CMAKE_CURRENT_SOURCE_DIR}/gui/src/*.cpp"
-# )
-
-# file(GLOB_RECURSE GUI_HEADERS CONFIGURE_DEPENDS
-#     "${CMAKE_CURRENT_SOURCE_DIR}/gui/include/*.h"
-#     "${CMAKE_CURRENT_SOURCE_DIR}/gui/include/*.hpp"
-# )
-
-# # add_executable(dpa_lbm_fluids
-# #     ${GUI_SOURCES}
-# #     ${GUI_HEADERS}
-# # )
-
-# add_executable(dpa_lbm_fluids
-#     "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
-# )
-
-# target_include_directories(dpa_lbm_fluids
-#     PRIVATE
-#         "${CMAKE_CURRENT_SOURCE_DIR}/gui/include"
-# )
-
-# target_link_libraries(dpa_lbm_fluids
-#     PUBLIC
-#         image_processing
-#     PRIVATE
-#         dpalbm
-#         Qt6::Widgets
-#         Qt6::Charts
-# )
-
-# ------------------------------------------------------------
 # Core LBM Things!
 # ------------------------------------------------------------
 
@@ -126,6 +81,11 @@ file(GLOB_RECURSE DPALBM_SOURCES CONFIGURE_DEPENDS
 file(GLOB_RECURSE DPALBM_HEADERS CONFIGURE_DEPENDS
     "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp"
+)
+
+# Remove files that depend on the viewer. Creates DPA core that will be used for hdk
+list(REMOVE_ITEM DPALBM_CORE_SOURCES
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/lbm_viewer2D.cpp"
 )
 
 add_library(dpalbm STATIC

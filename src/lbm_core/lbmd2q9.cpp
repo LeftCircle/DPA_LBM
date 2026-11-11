@@ -16,8 +16,8 @@ LBMd2q9::LBMd2q9(double dt, double tau, double w0) : LBMLattice(dt, tau) {
     set_tau(tau);
     double visc = _c_s * _c_s * (_tau - _dt * 0.5);
     printf("Shear viscoscity is %f\n", visc);
-    std::ofstream out_mass("./build/output/mass_and_momentum.txt", std::ios::trunc);
-    out_mass << "";
+    //std::ofstream out_mass("./build/output/mass_and_momentum.txt", std::ios::trunc);
+    //out_mass << "";
 
 }
 
@@ -55,10 +55,10 @@ double LBMd2q9::advance(LBMData& data, const double t) const {
     propogate_to_neighbors(data);
 
     // // log mass
-    std::ofstream out_mass("./build/output/mass_and_momentum.txt", std::ios::app);//, std::ios::app);
+    //std::ofstream out_mass("./build/output/mass_and_momentum.txt", std::ios::app);//, std::ios::app);
     auto total_mass = std::accumulate(data.dens.begin(), data.dens.end(), 0);
     auto total_momentum = std::inner_product(data.dens.begin(), data.dens.end(), data.u.begin(), pba::Vector2<double>());
-    out_mass << t << " " << total_mass << " (" << total_momentum.X() << ", " << total_momentum.Y() << ")" << "\n"; 
+    //out_mass << t << " " << total_mass << " (" << total_momentum.X() << ", " << total_momentum.Y() << ")" << "\n"; 
 
     return t + _dt;
 }
