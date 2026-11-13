@@ -19,6 +19,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
 # Allow the solver to be built without the standalone viewer and its
 # OpenImageIO / OpenGL dependencies.
 option(DPALBM_BUILD_VIEWER "Build the standalone LBM viewer" ON)
+option(DPALBM_BUILD_HDK "Build the Houdini HDK plugin" OFF)
 
 find_package(OpenMP REQUIRED)
 
@@ -103,13 +104,55 @@ set_target_properties(dpalbm_core PROPERTIES
 # ------------------------------------------------------------
 # HDK
 # ------------------------------------------------------------
-if(!DPALBM_BUILD_VIEWER)
-    list(APPEND CMAKE_PREFIX_PATH "$ENV{HFS}/toolkit/cmake")
-    find_package(Houdini REQUIRED)
-    set(DPALBM_BUILD_VIEWER OFF CACHE BOOL "" FORCE)
-    set(IMAGE_PROCESSING_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-    set(IMAGE_PROCESSING_BUILD_PYTHON OFF CACHE BOOL "" FORCE)
+# ------------------------------------------------------------
+# Houdini HDK plugin
+# ------------------------------------------------------------
 
+if(DPALBM_BUILD_HDK)
+    # set(DPALBM_BUILD_VIEWER OFF CACHE BOOL "" FORCE)
+    # set(IMAGE_PROCESSING_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    # set(IMAGE_PROCESSING_BUILD_PYTHON OFF CACHE BOOL "" FORCE)
+
+    # If the Houdini environment was sourced, help CMake locate
+    # HoudiniConfig.cmake. A user can also provide CMAKE_PREFIX_PATH
+    # explicitly when configuring.
+    if(DEFINED ENV{HFS} AND NOT "$ENV{HFS}" STREQUAL "")
+        list(APPEND CMAKE_PREFIX_PATH
+            "$ENV{HFS}/toolkit/cmake"
+        )
+    endif()
+
+    find_package(Houdini REQUIRED)
+
+    # Collect the C++ files that implement the Houdini adapter.
+    file(GLOB_RECURSE DPALBM_HDK_SOURCES CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/lbm_hdk/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/lbm_hdk/*.C"
+    )
+
+    # This becomes the shared library Houdini can load.
+    add_library(SOP_LBM SHARED
+        ${DPALBM_HDK_SOURCES}
+    )
+
+    target_include_directories(SOP_LBM
+        PRIVATE
+            # Supports #include "lbm_hdk/simple_hdk_test.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/include"
+
+            # Supports #include "simple_hdk_test.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/include/lbm_hdk"
+    )
+
+    target_link_libraries(SOP_LBM
+        PRIVATE
+            dpalbm_core
+            Houdini
+    )
+
+    # SideFX's CMake helper configures properties for an HDK target,
+    # including its library naming and output settings.
+    houdini_configure_target(SOP_LBM)
 
 endif()
 
