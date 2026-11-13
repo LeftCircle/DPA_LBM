@@ -112,7 +112,7 @@ TEST_CASE("test hand solution"){
             }
         }
     }
-    // NOTE -> if this fails it is likely due to boundary collisions
+    // NOTE -> if this fails it is likely due to boundary collisions or old solver setup
     REQUIRE(n_nonzeros == 9);
 }
 

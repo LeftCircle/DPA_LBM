@@ -1,4 +1,25 @@
 
+//-------------------------------------------------------------------------------
+// Nuild options
+//-------------------------------------------------------------------------------
+# Build with viewer
+cmake -S . -B build \
+  -DDPALBM_BUILD_VIEWER=ON
+
+cmake --build build -j
+
+------------
+# Core without image processing
+cmake -S . -B build-core \
+  -DDPALBM_BUILD_VIEWER=OFF
+
+cmake --build build-core -j
+
+
+//-------------------------------------------------------------------------------
+
+
+
 # Typical testing workflow:
 cmake -S . -B build
 cmake --build build --parallel

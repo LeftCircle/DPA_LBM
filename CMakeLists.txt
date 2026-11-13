@@ -5,116 +5,171 @@ project(DPA_LBMFluids
     LANGUAGES CXX
 )
 
+# Houdini 22 uses C++20 for its SDK.
 set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY
     "${CMAKE_BINARY_DIR}/bin"
 )
 
+# Allow the solver to be built without the standalone viewer and its
+# OpenImageIO / OpenGL dependencies.
+option(DPALBM_BUILD_VIEWER "Build the standalone LBM viewer" ON)
+
 find_package(OpenMP REQUIRED)
-# find_package(Qt6 REQUIRED COMPONENTS Widgets Charts)
 
-# Optional: build tests by default
-include(CTest)
-
-# ------------------------------------------------------------
-# Image Processing
-# ------------------------------------------------------------
-
-# set(IMAGE_PROCESSING_DEPS_ROOT
-#     "/home/left/local"
-#     #"/home/leftcircle/programming"
-#     CACHE PATH
-#     "Prefix containing include/ and lib/ for OpenImageIO/OpenEXR"
-# )
-
-set(OpenImageIO_ROOT "$ENV{HOME}/local/openimageio" CACHE PATH "")
-set(OpenEXR_ROOT "$ENV{HOME}/local/openexr" CACHE PATH "")
-
-set(IMAGE_PROCESSING_BUILD_VIEWER ON CACHE BOOL "" FORCE)
-set(IMAGE_PROCESSING_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(IMAGE_PROCESSING_BUILD_PYTHON OFF CACHE BOOL "" FORCE)
-
-add_subdirectory(
-    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/DPA_ImageProcessing"
-    "${CMAKE_CURRENT_BINARY_DIR}/DPA_ImageProcessing"
-)
-
-
-# ------------------------------------------------------------
-# OpenVDB
-# ------------------------------------------------------------
-
-# set(OpenVDB_ROOT
-#     "/home/left/local"
-#     CACHE PATH
-#     "OpenVDB installation prefix"
-# )
-
-# # OpenVDB installs FindOpenVDB.cmake here.
-# list(PREPEND CMAKE_MODULE_PATH
-#     "${OpenVDB_ROOT}/lib/cmake/OpenVDB"
-#     "${OpenVDB_ROOT}/lib64/cmake/OpenVDB"
-# )
-
-# list(PREPEND CMAKE_PREFIX_PATH
-#     "${OpenVDB_ROOT}"
-# )
-
-
-# ------------------------------------------------------------
-# Core LBM Things!
-# ------------------------------------------------------------
-
-# find_package(OpenVDB REQUIRED)
 find_package(Boost REQUIRED)
 find_package(TBB CONFIG REQUIRED)
 
-file(GLOB_RECURSE DPALBM_SOURCES CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/*.C"
-)
 
-file(GLOB_RECURSE DPALBM_HEADERS CONFIGURE_DEPENDS
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include/*.hpp"
-)
 
-# Remove files that depend on the viewer. Creates DPA core that will be used for hdk
-list(REMOVE_ITEM DPALBM_CORE_SOURCES
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/lbm_viewer2D.cpp"
-)
 
-add_library(dpalbm STATIC
-    ${DPALBM_SOURCES}
-    ${DPALBM_HEADERS}
-)
+# ------------------------------------------------------------
+# Utility: header-only code
+# ------------------------------------------------------------
 
-target_include_directories(dpalbm
-    PUBLIC
+add_library(dpalbm_utility INTERFACE)
+
+target_include_directories(dpalbm_utility
+    INTERFACE
+        # Allows #include "utility/nd_vector.h"
         "${CMAKE_CURRENT_SOURCE_DIR}/include"
+
+        # Also allows the current style: #include "nd_vector.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/utility"
 )
 
-target_link_libraries(dpalbm
+#### if no longer header only, use: ####
+# file(GLOB_RECURSE DPALBM_UTILITY_SOURCES CONFIGURE_DEPENDS
+#     "${CMAKE_CURRENT_SOURCE_DIR}/src/utility/*.cpp"
+#     "${CMAKE_CURRENT_SOURCE_DIR}/src/utility/*.C"
+# )
+
+# add_library(dpalbm_utility STATIC
+#     ${DPALBM_UTILITY_SOURCES}
+# )
+
+# target_include_directories(dpalbm_utility
+#     PUBLIC
+#         "${CMAKE_CURRENT_SOURCE_DIR}/include"
+#         "${CMAKE_CURRENT_SOURCE_DIR}/include/utility"
+# )
+
+# set_target_properties(dpalbm_utility PROPERTIES
+#     POSITION_INDEPENDENT_CODE ON
+# )
+
+
+# ------------------------------------------------------------
+# Core LBM solver
+# ------------------------------------------------------------
+
+file(GLOB_RECURSE DPALBM_CORE_SOURCES CONFIGURE_DEPENDS
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/lbm_core/*.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/lbm_core/*.C"
+)
+
+add_library(dpalbm_core STATIC
+    ${DPALBM_CORE_SOURCES}
+)
+
+target_include_directories(dpalbm_core
     PUBLIC
+        # Allows #include "lbm_core/lbm_data.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include"
+
+        # Also allows #include "lbm_data.h"
+        "${CMAKE_CURRENT_SOURCE_DIR}/include/lbm_core"
+)
+
+target_link_libraries(dpalbm_core
+    PUBLIC
+        dpalbm_utility
         OpenMP::OpenMP_CXX
-        image_processing
-        # OpenVDB::openvdb
         Boost::headers
         TBB::tbb
 )
 
-add_executable(dpa_lbm_fluids
-    "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
+# Required when this static library is linked into a shared library,
+# such as a Houdini plugin.
+set_target_properties(dpalbm_core PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
 )
 
-target_link_libraries(dpa_lbm_fluids
-    PRIVATE
-        dpalbm
-)
+# ------------------------------------------------------------
+# HDK
+# ------------------------------------------------------------
+if(!DPALBM_BUILD_VIEWER)
+    list(APPEND CMAKE_PREFIX_PATH "$ENV{HFS}/toolkit/cmake")
+    find_package(Houdini REQUIRED)
+    set(DPALBM_BUILD_VIEWER OFF CACHE BOOL "" FORCE)
+    set(IMAGE_PROCESSING_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(IMAGE_PROCESSING_BUILD_PYTHON OFF CACHE BOOL "" FORCE)
+
+
+endif()
+
+# ------------------------------------------------------------
+# Standalone viewer and executable
+# ------------------------------------------------------------
+
+if(DPALBM_BUILD_VIEWER)
+
+    # Keep your existing OpenImageIO/OpenEXR configuration here if needed.
+    set(OpenImageIO_ROOT "$ENV{HOME}/local/openimageio" CACHE PATH "")
+    set(OpenEXR_ROOT "$ENV{HOME}/local/openexr" CACHE PATH "")
+
+    # These control the third-party project's extra targets.
+    set(IMAGE_PROCESSING_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(IMAGE_PROCESSING_BUILD_PYTHON OFF CACHE BOOL "" FORCE)
+
+    add_subdirectory(
+        "${CMAKE_CURRENT_SOURCE_DIR}/third_party/DPA_ImageProcessing"
+        "${CMAKE_CURRENT_BINARY_DIR}/DPA_ImageProcessing"
+    )
+
+    file(GLOB_RECURSE DPALBM_VIEWER_SOURCES CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/viewer/*.cpp"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/viewer/*.C"
+    )
+
+    add_library(dpalbm_viewer STATIC
+        ${DPALBM_VIEWER_SOURCES}
+    )
+
+    target_include_directories(dpalbm_viewer
+        PUBLIC
+            # Allows #include "viewer/lbm_viewer2D.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/include"
+
+            # Also allows #include "lbm_viewer2D.h"
+            "${CMAKE_CURRENT_SOURCE_DIR}/include/viewer"
+    )
+
+    target_link_libraries(dpalbm_viewer
+        PUBLIC
+            dpalbm_core
+            image_processing
+    )
+
+    add_executable(dpa_lbm_fluids
+        "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
+    )
+
+    target_link_libraries(dpa_lbm_fluids
+        PRIVATE
+            dpalbm_viewer
+    )
+
+endif()
+
+
+
+
 
 # ------------------------------------------------------------
 # Catch2 tests
@@ -149,7 +204,7 @@ if(BUILD_TESTING)
 
     target_link_libraries(dpalbm_tests
         PRIVATE
-            dpalbm
+            dpalbm_core
             Catch2::Catch2WithMain
     )
 
