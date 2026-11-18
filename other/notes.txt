@@ -1,6 +1,6 @@
 
 //-------------------------------------------------------------------------------
-// Nuild options
+// Build options
 //-------------------------------------------------------------------------------
 # Build with viewer
 cmake -S . -B build \
@@ -49,6 +49,18 @@ run the gui
 cd /opt/hfsX.Y.ZZZ   # Replace with your installed version
 source houdini_setup
 
+# Then to build:
+cmake -S . -B build-hdk \
+  -DDPALBM_BUILD_HDK=ON \
+  -DDPALBM_BUILD_VIEWER=OFF \
+  -DBUILD_TESTING=OFF \
+  -DCMAKE_PREFIX_PATH="$HFS/toolkit/cmake" \
+  -DCMAKE_BUILD_TYPE=RelWithDebInfo
+
+cmake --build build-hdk --target SOP_LBM -j --verbose
+
+
+/////////////////
 echo "$HFS"
 g++ --version
 

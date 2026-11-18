@@ -5,9 +5,9 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/include/**",
-                "${workspaceFolder}/tests/catch2/**",
                 "${workspaceFolder}/tests/**",
-                "/home/left/local/include"
+                "/home/left/local/include",
+                
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
