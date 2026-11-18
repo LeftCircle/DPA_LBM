@@ -81,6 +81,8 @@ protected:
     )
         : SOP_Node(network, name, op)
     {
+        // From https://www.sidefx.com/docs/hdk/_s_o_p_2_s_o_p__c_p_p_wave_8_c-example.html
+        // mySopFlags.setManageDataIDs(true) ? 
     }
 
     OP_ERROR cookMySop(OP_Context& context) override;
