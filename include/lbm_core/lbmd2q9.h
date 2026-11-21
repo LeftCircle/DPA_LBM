@@ -59,70 +59,19 @@ public:
 	
 public:
 	LBMd2q9(double dt, double tau, double w_0 = DEFAULT_w0);
-
 	
-	void set_weight0(double w0);
 	void set_speed_of_sound(double c_s);
 
-	double get_tau() const { return _tau; }
-	double get_speed_of_sound() const { return _c_s; }
-	
 	pba::vec2d get_velocity(int i) const override { return _ci[i]; }
 	double get_weight(int i) const override { return _weights[i]; }
-
-	double advance(LBMData& data, const double t) const;
-
-	void compute_moments(LBMData& data) const;
-	
-	double single_f_equilibrium(
-		const double dens,
-		const pba::Vector2<double>& u,
-		const int i
-	) const;
-	void compute_local_collisions(LBMData& data) const;
-	void propogate_to_neighbors(LBMData& data) const;
-	
-	void set_to_equilibrium(LBMData& data) const;
+	int get_fi_minus(int q) const override { return _fi_minus[q]; };
 
 	double compute_max_mach_number(const pba::Vector2<double>& max_vel) const;
 	double estimate_reynolds_number(const pba::Vector2<double>& max_vel, float macroscopic_scale) const;
 	double get_shear_viscoscity() const;
-	double compute_collision_operator(
-		LBMData& data,
-		int x,
-		int y,
-		int i
-	) const;
 
-	double compute_force_source_term(
-		const pba::vec2d& F,
-		const pba::vec2d& u,
-		int i
-	) const;
-
-	// used to calculate f_star with local collision and forces
-	double local_collision_and_source(
-		LBMData& data,
-		int x, 
-		int y,
-		int q
-	) const;
-
-	void propogate_interior_points(LBMData& data) const;
-	void propogate_all_points(LBMData& data) const;
-	void propogate_periodic_boundary_points(LBMData& data) const;
-	void boundary_collision(LBMData& data) const;
-	void zero_gradient_outlet(LBMData& data) const;
-	void zou_he_velocity_inlet(LBMData& data) const;
-
-	int get_fi_minus(int q) const override { return _fi_minus[q]; };
 	
 private:
-	void _set_distribution_function_dimensions(LBMData& data) const;
-
-private:
-	
-
 	double _weights[N_LATTICE_POSITIONS] = {
 		4.0 / 9.0, 1.0 / 9.0, 1.0 / 9.0,
 		1.0 / 9.0, 1.0 / 9.0, 1.0 / 36.0,

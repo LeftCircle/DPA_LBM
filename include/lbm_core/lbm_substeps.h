@@ -44,6 +44,12 @@ private:
     void _local_collision(int i, int j, int q);
 };
 
+class SetToEquilibrium : public LBMPartialSolverWithFeq{
+public:
+    using LBMPartialSolverWithFeq::LBMPartialSolverWithFeq;
+    void solve() override;
+};
+
 class LocalCollisionWithForce : public LBMPartialSolverWithFeq{
 public:
     using LBMPartialSolverWithFeq::LBMPartialSolverWithFeq;

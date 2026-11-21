@@ -110,14 +110,14 @@ void LBMViewer2D::_keyboard(unsigned char key, int x, int y){
 			break;
         case 'c':{
             // Lower speed of sound
-            _solver->set_speed_of_sound(_solver->get_speed_of_sound() * 0.99);
-            std::printf("Speed of sound is now %f\n", _solver->get_speed_of_sound());
+            _solver->set_speed_of_sound(_solver->c_s() * 0.99);
+            std::printf("Speed of sound is now %f\n", _solver->c_s());
             break;
         }
         case 'C':{
             // Lower speed of sound
-            _solver->set_speed_of_sound(_solver->get_speed_of_sound() * 1.01);
-            std::printf("Speed of sound is now %f\n", _solver->get_speed_of_sound());
+            _solver->set_speed_of_sound(_solver->c_s() * 1.01);
+            std::printf("Speed of sound is now %f\n", _solver->c_s());
             break;
         }
         case 'd':{
@@ -140,14 +140,14 @@ void LBMViewer2D::_keyboard(unsigned char key, int x, int y){
         }
 		case 't':{
             // lower tau
-            _solver->set_tau(_solver->get_tau() * 0.99);
-            std::printf("Tau is now %f\n", _solver->get_tau());
+            _solver->set_tau(_solver->tau() * 0.99);
+            std::printf("Tau is now %f\n", _solver->tau());
             break;
         }
         case 'T':{
             // Raise tau
-            _solver->set_tau(_solver->get_tau() * 1.01);
-            std::printf("Tau is now %f\n", _solver->get_tau());
+            _solver->set_tau(_solver->tau() * 1.01);
+            std::printf("Tau is now %f\n", _solver->tau());
             break;
         }
         case 'v':{

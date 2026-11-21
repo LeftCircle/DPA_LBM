@@ -18,7 +18,6 @@ LBMd2q9::LBMd2q9(double dt, double tau, double w0) : LBMLattice(dt, tau) {
     printf("Shear viscoscity is %f\n", visc);
     //std::ofstream out_mass("./build/output/mass_and_momentum.txt", std::ios::trunc);
     //out_mass << "";
-
 }
 
 // triggers a lot of changes. Tau, dt, and velocities will be auto adjusted. 
@@ -48,192 +47,20 @@ void LBMLattice::_set_speed_of_sound_from_dx_dt() {
 }
 
 
-double LBMd2q9::advance(LBMData& data, const double t) const {
-    _set_distribution_function_dimensions(data);
-    compute_moments(data);
-    compute_local_collisions(data);
-    propogate_to_neighbors(data);
-
-    // // log mass
-    //std::ofstream out_mass("./build/output/mass_and_momentum.txt", std::ios::app);//, std::ios::app);
-    auto total_mass = std::accumulate(data.dens.begin(), data.dens.end(), 0);
-    auto total_momentum = std::inner_product(data.dens.begin(), data.dens.end(), data.u.begin(), pba::Vector2<double>());
-    //out_mass << t << " " << total_mass << " (" << total_momentum.X() << ", " << total_momentum.Y() << ")" << "\n"; 
-
-    return t + _dt;
-}
-
-void LBMd2q9::_set_distribution_function_dimensions(LBMData& data) const {
-    if (data.n_qs() != N_LATTICE_POSITIONS) [[unlikely]] {
-        data.resize_f_dimension(0, N_LATTICE_POSITIONS);
-    }
-}
-
-void LBMd2q9::compute_moments(LBMData& data) const {
-    auto& f = data.f;
-    #pragma omp parallel for
-    for (int j = 0; j < data.dimension(1); j++){
-        for (int i = 0; i < data.dimension(0); i++){
-            const double* q_block = data.f.data() + data.f.index(0, i, j);
-            data.dens(i, j) = std::accumulate(q_block, q_block + N_LATTICE_POSITIONS, 0.0);
-            if (data.dens(i, j) == 0){
-                data.u(i, j).set(0, 0);
-            } else {
-                double x = (f(1, i, j) + f(5, i, j) + f(8, i, j) - (f(3,i,j) + f(6,i,j) + f(7,i,j))) / data.dens(i,j); 
-                double y = (f(2, i, j) + f(5, i, j) + f(6, i, j) - (f(4,i,j) + f(7,i,j) + f(8,i,j))) / data.dens(i,j);
-                // data.u(i, j).set(x, y);
-
-                // TODO -> the correct term should have a Force / dens term,  but that seems to crash things
-                data.set_velocity(i, j, pba::vec2d(x, y) + data.get_acceleration(i, j) * _dt * 0.5);
-                // double x = (f(1, i, j) + f(5, i, j) + f(8, i, j) - (f(3,i,j) + f(6,i,j) + f(7,i,j))); 
-                // double y = (f(2, i, j) + f(5, i, j) + f(6, i, j) - (f(4,i,j) + f(7,i,j) + f(8,i,j)));
-                // data.u(i, j) = (pba::vec2d(x, y) + data.get_force(x, y) * _dt * 0.5) / data.dens(i, j);
-            }
-        }
-    }
-}
-
-double LBMd2q9::single_f_equilibrium(
-		const double dens,
-		const pba::Vector2<double>& u,
-		const int i
-	) const
-{
-    double cu = _ci[i] * u;
-    double uu = u * u;
-    return _weights[i] * dens * (1.0 + cu * _one_over_cs_squared +
-        cu * cu * 0.5 * _one_over_cs_fourth - 
-        uu * 0.5 * _one_over_cs_squared
-    );
-}
-
-// I feel like this is the perfect use case for std::transform, but carrying the index that is used all the time is 
-// quite frustrating. Should try boost to simplify this. 
-void LBMd2q9::compute_local_collisions(LBMData& data) const {
-    const int _y = data.dimension(1);
-    const int _x = data.dimension(0);
-    #pragma omp parallel for
-    for (int j = 0; j < _y; j++){
-        for (int i = 0; i < _x; i++){
-            const auto& dens = data.dens(i, j);
-            const auto& u = data.u(i, j);
-            for (int q = 0; q < N_LATTICE_POSITIONS; q++){
-                //data.fstar(q, i, j) = data.f(q, i, j) - _dt_over_tau * (data.f(q, i, j) - single_f_equilibrium(dens, u, q));
-                data.fstar(q, i, j) = local_collision_and_source(data, i, j, q);
-            }
-        }
-    }
-}
-
-void LBMd2q9::propogate_to_neighbors(LBMData& data) const {
-    //boundary_collision(data);
-    propogate_all_points(data);
-    zero_gradient_outlet(data);
-    //zou_he_velocity_inlet(data);
-}
-
-
-void LBMd2q9::boundary_collision(LBMData& data) const {
-    const int _y = data.dimension(1);
-    const int _x = data.dimension(0);
-    auto bound_coll_i = [*this, &data](int x, int y, int q, int p){
-        return single_f_equilibrium(p, data.u(x, y), q) + 
-                        (data.fstar(q, x, y) - 
-                        single_f_equilibrium(data.dens(x, y), data.u(x, y), q));
-    };
-    // Only having boundary condition with pressure gradient on sides
-    float inlet_pressure = 2.0;
-    float outlet_pressure = 1.0;
-    #pragma omp parallel for num_threads(4)
-    for (int j = 0; j < _y; j++){
-        // left side
-        data.fstar(1, 0, j) = bound_coll_i(_x - 2, j, 1, inlet_pressure);
-        data.fstar(5, 0, j) = bound_coll_i(_x - 2, j, 5, inlet_pressure);
-        data.fstar(8, 0, j) = bound_coll_i(_x - 2, j, 8, inlet_pressure);
-
-        // right side
-        data.fstar(3, _x - 1, j) = bound_coll_i(1, j, 3, outlet_pressure);
-        data.fstar(6, _x - 1, j) = bound_coll_i(1, j, 6, outlet_pressure);
-        data.fstar(7, _x - 1, j) = bound_coll_i(1, j, 7, outlet_pressure);
-    }
-}
-
-void LBMd2q9::zero_gradient_outlet(LBMData& data) const {
-    const int _y = data.dimension(1);
-    const int _x = data.dimension(0);
-    // The goal is zero gradient between the last two columnns
-    // (Might be better to copy density and u over instead of just fstar)
-    #pragma omp parallel for num_threads(4)
-    for (int j = 0; j < _y; j++){
-        for (int q = 0; q < N_LATTICE_POSITIONS; q++){
-            data.set_f(_x - 1, j, q, data.get_f(_x - 2, j, q));
-        }
-    }
-}
-
-void LBMd2q9::zou_he_velocity_inlet(LBMData& data) const{
-    // const int ny = data.dimension(1);
-
-    // int known_pops[6] = {0, 2, 3, 4, 6, 7};
-    // // fixed imposed velocity
-    // auto ux = 1.0;
-    // auto uy = 0.0;
-    // for (int j = 0; j < ny; j++){
-    //     // 1, 5, and 8 are unknown
-    //     // reconstruct dens from known populations
-    //     double dens = 0;
-    //     for (int q = 0; q < 6; q++){
-    //         dens += data.get_f(0, j, q);
-    //     }
-    //     const double f2 = data.get_f(0, y, 2);
-    //     const double f3 = data.get_f(0, y, 3);
-    //     const double f4 = data.get_f(0, y, 4);
-    //     const double f6 = data.get_f(0, y, 6);
-    //     const double f7 = data.get_f(0, y, 7);
-    //     dens /= (1.0 - ux);
-    //     data.set_f(0, y, 1, f3 + 2.0 / 3.0 * dens * ux);
-    //     data.set_f(0, y, 5, f7 + 0.5 * (f4 - f2) + 1.0 / 6.0 * dens * ux + 0.5 * dens * uy);
-    //     data.set_f(0, y, 8, f6 + 0.5 * (f2 - f4) + (1.0 / 6.0) * dens * ux - 0.5 * dens * uy);
-    // }
-
-}
-
-void LBMd2q9::propogate_all_points(LBMData& data) const {
-    // const int _y = data.dimension(1);
-    // const int _x = data.dimension(0);
-    // const auto& bounds = data.get_bounds();
-    // #pragma omp parallel for
-    // for (int j = 0; j < _y; j++){
-    //     for (int i = 0; i < _x; i++){
-    //         for (int q = 0; q < N_LATTICE_POSITIONS; q++){
-    //             if (bounds.is_blocked(i, j, q)) continue;
-
-    //             int ni = (i + static_cast<int>(_ci[q].X()) + data.dimension(0)) % data.dimension(0);
-    //             int nj = (j + static_cast<int>(_ci[q].Y()) + data.dimension(1)) % data.dimension(1);
-    //             if (bounds.is_blocked(ni, nj, q)){
-    //                 data.set_f(i, j, get_fi_minus(q), data.get_fstar(i, j, q));
-    //             } else {
-    //                 data.f(q, ni, nj) = data.fstar(q, i, j);
-    //             }
-    //         }
-    //     }
-    // }
-}
-
-void LBMd2q9::set_to_equilibrium(LBMData& data) const {
-   const int _y = data.dimension(1);
-    const int _x = data.dimension(0);
-    #pragma omp parallel for
-    for (int j = 0; j < _y; j++){
-        for (int i = 0; i < _x; i++){
-            const auto& dens = data.dens(i, j);
-            const auto& u = data.u(i, j);
-            for (int q = 0; q < 9; q++){
-                data.f(q, i, j) = single_f_equilibrium(dens, u, q);
-            }   
-        }
-    }
-}
+// void LBMd2q9::set_to_equilibrium(LBMData& data) const {
+//    const int _y = data.dimension(1);
+//     const int _x = data.dimension(0);
+//     #pragma omp parallel for
+//     for (int j = 0; j < _y; j++){
+//         for (int i = 0; i < _x; i++){
+//             const auto& dens = data.dens(i, j);
+//             const auto& u = data.u(i, j);
+//             for (int q = 0; q < 9; q++){
+//                 data.f(q, i, j) = single_f_equilibrium(dens, u, q);
+//             }   
+//         }
+//     }
+// }
 
 double LBMd2q9::get_shear_viscoscity() const {
     return _c_s * _c_s * (_tau - _dt * 0.5);
@@ -246,47 +73,6 @@ double LBMd2q9::compute_max_mach_number(const pba::Vector2<double>& max_vel) con
 
 double LBMd2q9::estimate_reynolds_number(const pba::Vector2<double>& max_vel, float macroscopic_scale) const{
     return max_vel.magnitude() * macroscopic_scale / get_shear_viscoscity();
-}
-
-double LBMd2q9::compute_collision_operator(
-    LBMData& data,
-    int x, 
-    int y,
-    int i
-) const{
-    auto fstar = single_f_equilibrium(data.dens(x, y), data.u(x, y), i);
-    return -1.0 / _tau * (data.get_f(x, y, i) - fstar);
-}
-
-double LBMd2q9::compute_force_source_term(
-    const pba::vec2d& F,
-    const pba::vec2d& u,
-    int i
-) const {
-    double s = 0;
-    for (int alpha = 0; alpha < 2; alpha++){
-        for (int beta = 0; beta < 2; beta++){
-            auto t1 = (1.0 - _dt_over_tau * 0.5);
-            auto t2 = _ci[i][alpha] * _one_over_cs_squared;
-            auto t3 = _ci[i][alpha] * _ci[i][beta];
-            t3 = alpha == beta ? t3 - _c_s * _c_s : t3;
-            t3 *= u[beta] * _one_over_cs_fourth;
-            s += t1 * _weights[i] * (t2 - t3) * F[alpha];
-        }
-    }
-    return s;
-}
-
-double LBMd2q9::local_collision_and_source(
-    LBMData& data,
-    int x, 
-    int y,
-    int q
-) const {
-    auto collision_op = compute_collision_operator(data, x, y, q);
-    auto F = data.get_acceleration(x, y) * data.dens(x, y);
-    auto source = compute_force_source_term(F, data.u(x, y), q);
-    return data.get_f(x, y, q) + (collision_op + source) * _dt;
 }
 
 

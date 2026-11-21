@@ -88,8 +88,8 @@ int main(int argc, char** argv){
     //auto local_coll = std::make_shared<LocalCollisionWithForce>(lattice, d, feq);
     auto local_coll = std::make_shared<LocalCollision>(lattice, d, feq);
     auto periodic = std::make_shared<PeriodicPropagation>(lattice, d);
-    auto boundary_cond = std::make_shared<BoundaryZouHeInlet>(lattice, d, constant_inlet_vel);
     auto bounds = std::make_shared<BounceBackHalfwaySolver>(lattice, d);
+    auto boundary_cond = std::make_shared<BoundaryZouHeInlet>(lattice, d, constant_inlet_vel);
     auto moment_update = std::make_shared<MomentUpdatePeriodicD2Q9>(lattice, d);
 
 
@@ -128,8 +128,9 @@ int main(int argc, char** argv){
         } 
     }
 
-    d2q9_lattice->set_to_equilibrium(*data);
-
+    //d2q9_lattice->set_to_equilibrium(*data);
+    auto to_eq = std::make_unique<SetToEquilibrium>(lattice, d, feq);
+    to_eq->solve();
     
     LBMViewer2D viewer(data, d2q9_lattice, sys);
     viewer.bounds = &bounds->get_bounds();

@@ -19,6 +19,24 @@ void LocalCollision::solve() {
     );
 }
 
+void SetToEquilibrium::solve() {
+    //for (int j = 0; j < _y; j++){
+//         for (int i = 0; i < _x; i++){
+//             const auto& dens = data.dens(i, j);
+//             const auto& u = data.u(i, j);
+//             for (int q = 0; q < 9; q++){
+//                 data.f(q, i, j) = single_f_equilibrium(dens, u, q);
+//             }   
+//         }
+//     }
+    auto to_eq = [&](int i, int j, int k){
+        const auto& dens = _data->dens(i, j);
+        const auto& u = _data->u(i, j);
+        _data->set_f(i, j, k, _feq_func->solve(*_lattice, dens, u, k));
+    };
+    _data->for_each(to_eq);
+}
+
 void LocalCollision::_local_collision(int i, int j, int q){
     // TODO -> not the most efficient to get density and vel for each lattice point
     auto dens = _data->get_density(i, j);
