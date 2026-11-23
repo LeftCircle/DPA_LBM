@@ -46,22 +46,6 @@ void LBMLattice::_set_speed_of_sound_from_dx_dt() {
     _one_over_cs_fourth = _one_over_cs_squared * _one_over_cs_squared;
 }
 
-
-// void LBMd2q9::set_to_equilibrium(LBMData& data) const {
-//    const int _y = data.dimension(1);
-//     const int _x = data.dimension(0);
-//     #pragma omp parallel for
-//     for (int j = 0; j < _y; j++){
-//         for (int i = 0; i < _x; i++){
-//             const auto& dens = data.dens(i, j);
-//             const auto& u = data.u(i, j);
-//             for (int q = 0; q < 9; q++){
-//                 data.f(q, i, j) = single_f_equilibrium(dens, u, q);
-//             }   
-//         }
-//     }
-// }
-
 double LBMd2q9::get_shear_viscoscity() const {
     return _c_s * _c_s * (_tau - _dt * 0.5);
 }

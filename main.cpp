@@ -40,7 +40,7 @@ int main(int argc, char** argv){
     int h = 1080 / 4;
     std::shared_ptr<LBMData> data = std::make_shared<LBMData>(w, h, LBMd2q9::N_LATTICE_POSITIONS);
     std::shared_ptr<LBMd2q9> d2q9_lattice = std::make_shared<LBMd2q9>(1.0, 1.0);
-    d2q9_lattice->set_speed_of_sound(1.0 / sqrt(3.0));
+    //d2q9_lattice->set_speed_of_sound(1.0 / sqrt(3.0));
     d2q9_lattice->set_tau(0.55);
     double constant_inlet_vel = 0.1;
     for (int j = 0; j < h; j++){
@@ -81,16 +81,16 @@ int main(int argc, char** argv){
 
     // Create the solver system
     
-    auto d = std::shared_ptr<LBMData>(data);
-    auto lattice = std::shared_ptr<LBMd2q9>(d2q9_lattice);
-    //auto feq = std::make_shared<LBM_EquilibriumIncompressible>(0.95);
+    // auto d = std::shared_ptr<LBMData>(data);
+    // auto lattice = std::shared_ptr<LBMd2q9>(d2q9_lattice);
+    //auto feq = std::make_shared<LBM_EquilibriumIncompressible>(0.925);
     auto feq = std::make_shared<LBM_EquilibriumFunction>();
     //auto local_coll = std::make_shared<LocalCollisionWithForce>(lattice, d, feq);
-    auto local_coll = std::make_shared<LocalCollision>(lattice, d, feq);
-    auto periodic = std::make_shared<PeriodicPropagation>(lattice, d);
-    auto bounds = std::make_shared<BounceBackHalfwaySolver>(lattice, d);
-    auto boundary_cond = std::make_shared<BoundaryZouHeInlet>(lattice, d, constant_inlet_vel);
-    auto moment_update = std::make_shared<MomentUpdatePeriodicD2Q9>(lattice, d);
+    auto local_coll = std::make_shared<LocalCollision>(d2q9_lattice, data, feq);
+    auto periodic = std::make_shared<PeriodicPropagation>(d2q9_lattice, data);
+    auto bounds = std::make_shared<BounceBackHalfwaySolver>(d2q9_lattice, data);
+    auto boundary_cond = std::make_shared<BoundaryZouHeInlet>(d2q9_lattice, data, constant_inlet_vel);
+    auto moment_update = std::make_shared<MomentUpdatePeriodicD2Q9>(d2q9_lattice, data);
 
 
     auto sys = std::make_shared<SolverSystem>(local_coll, periodic, bounds, boundary_cond, moment_update);
@@ -129,7 +129,7 @@ int main(int argc, char** argv){
     }
 
     //d2q9_lattice->set_to_equilibrium(*data);
-    auto to_eq = std::make_unique<SetToEquilibrium>(lattice, d, feq);
+    auto to_eq = std::make_unique<SetToEquilibrium>(d2q9_lattice, data, feq);
     to_eq->solve();
     
     LBMViewer2D viewer(data, d2q9_lattice, sys);
